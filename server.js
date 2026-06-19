@@ -32,38 +32,30 @@ function verifyAppProxySignature(query, secret) {
   }
 }
 
-app.get('/', (req, res) => {
+app.get('/me', (req, res) => {
   if (!SHOPIFY_API_SECRET) {
-    return res.status(500).send('Konfigurim i paplotesuar: mungon SHOPIFY_API_SECRET.');
+    return res.status(500).json({ error: 'Mungon SHOPIFY_API_SECRET.' });
   }
 
   if (!verifyAppProxySignature(req.query, SHOPIFY_API_SECRET)) {
-    return res.status(401).send('Kerkese e pavlefshme.');
+    return res.status(401).json({ error: 'Kerkese e pavlefshme.' });
   }
 
   const customerId = req.query.logged_in_customer_id;
-  res.set('Content-Type', 'application/liquid');
 
   if (!customerId) {
-    return res.send(`
-      <div style="max-width:420px;margin:3rem auto;text-align:center;font-family:sans-serif;">
-        <h2>Programi i krijuesve</h2>
-        <p>Per te vazhduar, fillimisht hyr ne llogarine tende.</p>
-        <a href="/account/login" style="display:inline-block;margin-top:1rem;padding:.75rem 1.5rem;background:#111;color:#fff;text-decoration:none;border-radius:6px;">Hyr</a>
-      </div>
-    `);
+    return res.json({ loggedIn: false });
   }
 
-  return res.send(`
-    <div style="max-width:420px;margin:3rem auto;text-align:center;font-family:sans-serif;">
-      <h2>Mire se erdhe!</h2>
-      <p>Je i kycur. ID jote te Shopify: <strong>${customerId}</strong></p>
-      <p style="opacity:.7;font-size:.9rem;">Ura mes Shopify dhe Railway funksionon.</p>
-    </div>
-  `);
+  return res.json({
+    loggedIn: true,
+    customerId: customerId,
+    shop: req.query.shop || null,
+  });
 });
 
 app.get('/health', (req, res) => res.send('OK'));
+app.get('/', (req, res) => res.send('Seller program backend eshte gjalle.'));
 
 app.listen(PORT, () => {
   console.log(`Serveri po degjon ne portin ${PORT}`);
