@@ -14,6 +14,16 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT now()
     );
   `);
+
+  await pool.query(`
+    ALTER TABLE partners
+      ADD COLUMN IF NOT EXISTS terms_accepted BOOLEAN DEFAULT false;
+  `);
+  await pool.query(`
+    ALTER TABLE partners
+      ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
+  `);
+
   console.log('Tabela partners eshte gati.');
 }
 
