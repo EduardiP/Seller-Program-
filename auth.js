@@ -51,17 +51,14 @@ router.get('/me', requireShopifyProxy, async (req, res) => {
   if (!customerId) {
     return res.json({ loggedIn: false });
   }
-
   try {
     const result = await pool.query(
-      'SELECT customer_id, email, creator_name FROM partners WHERE customer_id = $1',
+      'SELECT customer_id, email, creator_name, terms_accepted FROM partners WHERE customer_id = $1',
       [customerId]
     );
-
     if (result.rows.length === 0) {
       return res.json({ loggedIn: true, registered: false, customerId });
     }
-
     const p = result.rows[0];
     return res.json({
       loggedIn: true,
@@ -69,6 +66,7 @@ router.get('/me', requireShopifyProxy, async (req, res) => {
       customerId: p.customer_id,
       email: p.email,
       creatorName: p.creator_name,
+      termsAccepted: p.terms_accepted,
     });
   } catch (err) {
     console.error('Gabim DB /me:', err);
@@ -83,6 +81,15 @@ router.post('/register', requireShopifyProxy, async (req, res) => {
   }
 
   const email = (req.body && req.body.email) ? String(req.body.email).trim() : null;
+  const creatorName = (req.body && req.body.name) ? String(req.body.name).trim() : null;
+  const termsAccepted = !!(req.body && req.body.termsAccepted);
+
+  if (!creatorName) {
+    return res.status(400).json({ error: 'Emri eshte i detyrueshem.' });
+  }
+  if (!termsAccepted) {
+    return res.status(400).json({ error: 'Duhet te pranosh kushtet.' });
+  }
 
   try {
     const existing = await pool.query(
@@ -94,8 +101,10 @@ router.post('/register', requireShopifyProxy, async (req, res) => {
     }
 
     await pool.query(
-      'INSERT INTO partners (customer_id, email) VALUES ($1, $2)',
-      [customerId, email]
+      `INSERT INTO partners
+         (customer_id, email, creator_name, terms_accepted, terms_accepted_at)
+       VALUES ($1, $2, $3, $4, now())`,
+      [customerId, email, creatorName, termsAccepted]
     );
 
     return res.json({ registered: true, alreadyExisted: false, customerId });
