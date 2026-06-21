@@ -134,4 +134,53 @@ router.get('/printify/catalog-view', requireShopifyProxy, async function (req, r
   }
 });
 
+// VARIANTET: per nje produkt te zgjedhur, kthen print provider-in e pare
+// dhe variantet (ngjyra + madhesi). Frontend-i e perdor per te ndertuar formen.
+router.get('/printify/blueprint/:id/variants', requireShopifyProxy, async function (req, res) {
+  try {
+    const blueprintId = req.params.id;
+    if (!isSelected(parseInt(blueprintId, 10))) {
+      return res.status(400).json({ ok: false, error: 'Produkt i palejuar.' });
+    }
+
+    // 1) Print providers per kete produkt.
+    const providers = await printifyFetch('/catalog/blueprints/' + blueprintId + '/print_providers.json');
+    if (!Array.isArray(providers) || providers.length === 0) {
+      return res.status(404).json({ ok: false, error: 'Nuk u gjet print provider.' });
+    }
+    const provider = providers[0]; // marrim te parin per thjeshtesi
+
+    // 2) Variantet per kete produkt + provider.
+    const variantsData = await printifyFetch(
+      '/catalog/blueprints/' + blueprintId + '/print_providers/' + provider.id + '/variants.json'
+    );
+    const variants = (variantsData && variantsData.variants) || [];
+
+    // Nxjerrim ngjyrat dhe madhesite unike (per menu).
+    const colors = [];
+    const sizes = [];
+    variants.forEach(function (v) {
+      const c = v.options && v.options.color;
+      const s = v.options && v.options.size;
+      if (c && colors.indexOf(c) === -1) colors.push(c);
+      if (s && sizes.indexOf(s) === -1) sizes.push(s);
+    });
+
+    res.json({
+      ok: true,
+      blueprintId: parseInt(blueprintId, 10),
+      printProviderId: provider.id,
+      printProviderTitle: provider.title,
+      colors: colors,
+      sizes: sizes,
+      variantCount: variants.length,
+      variants: variants.map(function (v) {
+        return { id: v.id, color: v.options && v.options.color, size: v.options && v.options.size };
+      })
+    });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
 module.exports = { router, printifyFetch, getShopId };
