@@ -63,12 +63,34 @@ router.get('/printify/shops', requireShopifyProxy, async function (req, res) {
   }
 });
 
+// Fjale kyce per veshje te siperme (top-wear). Titulli duhet te permbaje njeren.
+const TOPWEAR_KEYWORDS = [
+  'tee', 't-shirt', 'tshirt', 'shirt',
+  'sweatshirt', 'hoodie', 'hooded',
+  'tank', 'long sleeve', 'longsleeve',
+  'crop', 'polo', 'jersey', 'pullover', 'crewneck', 'crew neck'
+];
+
+// Disa fjale qe duam t'i perjashtojme (jo veshje te siperme edhe pse permbajne fjalet lart).
+const TOPWEAR_EXCLUDE = [
+  'baby', 'infant', 'toddler', 'onesie', 'bib',
+  'dog', 'pet', 'mug', 'bag', 'case', 'sock', 'hat', 'cap', 'beanie',
+  'blanket', 'pillow', 'towel', 'apron', 'sticker', 'poster', 'canvas'
+];
+
+function isTopwear(title) {
+  const t = (title || '').toLowerCase();
+  const excluded = TOPWEAR_EXCLUDE.some(function (w) { return t.indexOf(w) !== -1; });
+  if (excluded) return false;
+  return TOPWEAR_KEYWORDS.some(function (w) { return t.indexOf(w) !== -1; });
+}
+
 // KATALOGU: kthen listen e produkteve baze (blueprints) nga Printify.
+// ?all=1 kthen te gjitha; pa te, kthen vetem veshjet e siperme.
 router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
   try {
     const blueprints = await printifyFetch('/catalog/blueprints.json');
-    // Kthejme vetem fushat qe na duhen, jo gjithcka.
-    const list = (blueprints || []).map(function (b) {
+    let list = (blueprints || []).map(function (b) {
       return {
         id: b.id,
         title: b.title,
@@ -77,6 +99,9 @@ router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
         image: (b.images && b.images[0]) || null
       };
     });
+    if (req.query.all !== '1') {
+      list = list.filter(function (b) { return isTopwear(b.title); });
+    }
     res.json({ ok: true, count: list.length, blueprints: list });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
