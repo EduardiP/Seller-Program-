@@ -3,7 +3,7 @@ const { initDb } = require('./db');
 const auth = require('./auth');
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
 
 const PORT = process.env.PORT || 3000;
 
