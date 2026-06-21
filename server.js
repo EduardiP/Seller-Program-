@@ -8,7 +8,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 app.use('/', auth.router);          // sign-in: /me, /register
-// app.use('/', require('./products').router);  // me vone
+app.use('/', require('./products').router);  // Printify
 // app.use('/', require('./ai').router);        // me vone
 
 app.get('/health', (req, res) => res.send('OK'));
