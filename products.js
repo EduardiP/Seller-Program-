@@ -63,4 +63,24 @@ router.get('/printify/shops', requireShopifyProxy, async function (req, res) {
   }
 });
 
+// KATALOGU: kthen listen e produkteve baze (blueprints) nga Printify.
+router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
+  try {
+    const blueprints = await printifyFetch('/catalog/blueprints.json');
+    // Kthejme vetem fushat qe na duhen, jo gjithcka.
+    const list = (blueprints || []).map(function (b) {
+      return {
+        id: b.id,
+        title: b.title,
+        brand: b.brand,
+        model: b.model,
+        image: (b.images && b.images[0]) || null
+      };
+    });
+    res.json({ ok: true, count: list.length, blueprints: list });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
 module.exports = { router, printifyFetch, getShopId };
