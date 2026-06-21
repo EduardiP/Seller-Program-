@@ -36,16 +36,12 @@ let cachedShopId = null;
 
 async function getShopId() {
   if (cachedShopId) return cachedShopId;
-
-  // Nese e ke caktuar PRINTIFY_SHOP_ID te Railway, perdoret ai.
   if (process.env.PRINTIFY_SHOP_ID) {
     cachedShopId = process.env.PRINTIFY_SHOP_ID;
     return cachedShopId;
   }
-
   const shops = await printifyFetch('/shops.json');
   if (Array.isArray(shops) && shops.length > 0) {
-    // Zgjedh dyqanin Shopify; nese s'ka, merr te parin.
     const shopify = shops.find(function (s) { return s.sales_channel === 'shopify'; });
     cachedShopId = (shopify || shops[0]).id;
     return cachedShopId;
@@ -53,7 +49,7 @@ async function getShopId() {
   throw new Error('Nuk u gjet asnje dyqan ne llogarine Printify.');
 }
 
-// TEST: kthen listen e dyqaneve — per te konfirmuar qe token-i punon.
+// TEST: kthen listen e dyqaneve.
 router.get('/printify/shops', requireShopifyProxy, async function (req, res) {
   try {
     const shops = await printifyFetch('/shops.json');
@@ -63,58 +59,53 @@ router.get('/printify/shops', requireShopifyProxy, async function (req, res) {
   }
 });
 
-// Fjale kyce: vetem t-shirt dhe tank top.
-const TOPWEAR_KEYWORDS = [
-  'tee', 't-shirt', 'tshirt',
-  'tank'
+// ID-te e produkteve te zgjedhura nga ti (vetem keto i shohin partneret).
+const SELECTED_BLUEPRINT_IDS = [
+  5, 6, 9, 10, 12, 14, 15, 26, 88, 100, 139, 142, 145, 184, 279, 281,
+  454, 460, 466, 518, 526, 565, 577, 605, 606, 607, 664, 706, 725, 751,
+  1032, 1089, 1121, 1184, 1269, 1318, 1321, 1326, 1336, 1349, 1350, 1358,
+  1382, 1459, 1484, 1575, 1585, 1669, 1942, 2039, 2835, 2840, 2842, 2856,
+  2910, 2925, 2927, 2964, 3035, 3042, 3104, 3113, 3117, 4131, 4745, 5345
 ];
 
-const TOPWEAR_EXCLUDE = [
-  'baby', 'infant', 'toddler', 'onesie', 'bib', 'kids', 'youth',
-  'dog', 'pet', 'mug', 'bag', 'case', 'sock', 'hat', 'cap', 'beanie',
-  'blanket', 'pillow', 'towel', 'apron', 'sticker', 'poster', 'canvas',
-  'long sleeve', 'longsleeve', 'sweatshirt', 'hoodie', 'hooded',
-  'polo', 'pullover', 'crewneck', 'crew neck', 'jacket', 'dress'
-];
-
-function isTopwear(title) {
-  const t = (title || '').toLowerCase();
-  const excluded = TOPWEAR_EXCLUDE.some(function (w) { return t.indexOf(w) !== -1; });
-  if (excluded) return false;
-  return TOPWEAR_KEYWORDS.some(function (w) { return t.indexOf(w) !== -1; });
+function isSelected(id) {
+  return SELECTED_BLUEPRINT_IDS.indexOf(id) !== -1;
 }
 
-// KATALOGU: kthen listen e produkteve baze (blueprints) nga Printify.
-// ?all=1 kthen te gjitha; pa te, kthen vetem veshjet e siperme.
+// KATALOGU: kthen vetem produktet e zgjedhura.
 router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
   try {
     const blueprints = await printifyFetch('/catalog/blueprints.json');
-    let list = (blueprints || []).map(function (b) {
-      return {
-        id: b.id,
-        title: b.title,
-        brand: b.brand,
-        model: b.model,
-        image: (b.images && b.images[0]) || null
-      };
-    });
-    if (req.query.all !== '1') {
-      list = list.filter(function (b) { return isTopwear(b.title); });
-    }
+    const list = (blueprints || [])
+      .filter(function (b) { return isSelected(b.id); })
+      .map(function (b) {
+        return {
+          id: b.id,
+          title: b.title,
+          brand: b.brand,
+          model: b.model,
+          image: (b.images && b.images[0]) || null
+        };
+      });
     res.json({ ok: true, count: list.length, blueprints: list });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
 });
 
-// FAQE PROVIZORE: tregon produktet (t-shirt/tank) me foto, titull dhe id.
-// Hape ne browser: /apps/seller-program/printify/catalog-view
+// FAQE PROVIZORE: tregon produktet me foto, titull dhe id.
+// Pa parametra: vetem te zgjedhurat. Me ?all=1: te gjitha t-shirt/tank.
 router.get('/printify/catalog-view', requireShopifyProxy, async function (req, res) {
   try {
     const blueprints = await printifyFetch('/catalog/blueprints.json');
-    let list = (blueprints || []).filter(function (b) { return isTopwear(b.title); });
+    let list;
     if (req.query.all === '1') {
-      list = blueprints || [];
+      list = (blueprints || []).filter(function (b) {
+        const t = (b.title || '').toLowerCase();
+        return t.indexOf('tee') !== -1 || t.indexOf('shirt') !== -1 || t.indexOf('tank') !== -1;
+      });
+    } else {
+      list = (blueprints || []).filter(function (b) { return isSelected(b.id); });
     }
 
     let cards = '';
@@ -132,7 +123,7 @@ router.get('/printify/catalog-view', requireShopifyProxy, async function (req, r
     const html =
       '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
       '<title>Catalog</title></head><body style="margin:0;padding:16px;background:#fafafa;">' +
-      '<h2 style="font-family:sans-serif;">Produktet (' + list.length + ') — shenoji ID-te qe do</h2>' +
+      '<h2 style="font-family:sans-serif;">Produktet (' + list.length + ')</h2>' +
       '<div style="display:flex;flex-wrap:wrap;gap:12px;">' + cards + '</div>' +
       '</body></html>';
 
