@@ -63,19 +63,18 @@ router.get('/printify/shops', requireShopifyProxy, async function (req, res) {
   }
 });
 
-// Fjale kyce per veshje te siperme (top-wear). Titulli duhet te permbaje njeren.
+// Fjale kyce: vetem t-shirt dhe tank top.
 const TOPWEAR_KEYWORDS = [
-  'tee', 't-shirt', 'tshirt', 'shirt',
-  'sweatshirt', 'hoodie', 'hooded',
-  'tank', 'long sleeve', 'longsleeve',
-  'crop', 'polo', 'jersey', 'pullover', 'crewneck', 'crew neck'
+  'tee', 't-shirt', 'tshirt',
+  'tank'
 ];
 
-// Disa fjale qe duam t'i perjashtojme (jo veshje te siperme edhe pse permbajne fjalet lart).
 const TOPWEAR_EXCLUDE = [
-  'baby', 'infant', 'toddler', 'onesie', 'bib',
+  'baby', 'infant', 'toddler', 'onesie', 'bib', 'kids', 'youth',
   'dog', 'pet', 'mug', 'bag', 'case', 'sock', 'hat', 'cap', 'beanie',
-  'blanket', 'pillow', 'towel', 'apron', 'sticker', 'poster', 'canvas'
+  'blanket', 'pillow', 'towel', 'apron', 'sticker', 'poster', 'canvas',
+  'long sleeve', 'longsleeve', 'sweatshirt', 'hoodie', 'hooded',
+  'polo', 'pullover', 'crewneck', 'crew neck', 'jacket', 'dress'
 ];
 
 function isTopwear(title) {
