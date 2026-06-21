@@ -3,6 +3,7 @@
 
 const express = require('express');
 const { requireShopifyProxy } = require('./auth');
+const { pool } = require('./db');
 
 const router = express.Router();
 
@@ -246,9 +247,44 @@ router.post('/printify/create-product', requireShopifyProxy, express.json({ limi
     };
 
     const created = await printifyFetch('/shops/' + shopId + '/products.json', { method: 'POST', body: payload });
+
+    // Ruaj produktin te baza, te lidhur me partnerin (per komision dhe listim).
+    var previewUrl = null;
+    if (created.images && created.images.length > 0) {
+      previewUrl = created.images[0].src || null;
+    }
+    try {
+      await pool.query(
+        `INSERT INTO products (customer_id, printify_product_id, title, blueprint_id, preview_url, published)
+         VALUES ($1, $2, $3, $4, $5, false)`,
+        [req.customerId, String(created.id), created.title, blueprintId, previewUrl]
+      );
+    } catch (dbErr) {
+      console.error('Gabim ruajtje produkti te DB:', dbErr);
+    }
+
     res.json({ ok: true, productId: created.id, title: created.title, published: false });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+// PRODUKTET E MIA: kthen vetem produktet e ketij partneri (nga baza jone).
+router.get('/printify/my-products', requireShopifyProxy, async function (req, res) {
+  try {
+    if (!req.customerId) {
+      return res.status(401).json({ ok: false, error: 'Duhet te jesh i kycur.' });
+    }
+    const result = await pool.query(
+      `SELECT printify_product_id, title, blueprint_id, preview_url, published, created_at
+         FROM products
+        WHERE customer_id = $1
+        ORDER BY created_at DESC`,
+      [req.customerId]
+    );
+    res.json({ ok: true, count: result.rows.length, products: result.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
