@@ -1,4 +1,6 @@
 // products.js — lidhja me Printify API
+// Token-i i Printify rri vetem ketu (server-side), kurre te frontend-i.
+
 const express = require('express');
 const { requireShopifyProxy } = require('./auth');
 
@@ -7,6 +9,7 @@ const router = express.Router();
 const PRINTIFY_BASE = 'https://api.printify.com/v1';
 const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN;
 
+// Ndihmes: ben nje kerkese te Printify me header-at e duhur.
 async function printifyFetch(path, options) {
   options = options || {};
   const res = await fetch(PRINTIFY_BASE + path, {
@@ -32,6 +35,7 @@ async function printifyFetch(path, options) {
   return data;
 }
 
+// Cache i thjeshte per Shop ID.
 let cachedShopId = null;
 
 async function getShopId() {
@@ -94,7 +98,6 @@ router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
 });
 
 // FAQE PROVIZORE: tregon produktet me foto, titull dhe id.
-// Pa parametra: vetem te zgjedhurat. Me ?all=1: te gjitha t-shirt/tank.
 router.get('/printify/catalog-view', requireShopifyProxy, async function (req, res) {
   try {
     const blueprints = await printifyFetch('/catalog/blueprints.json');
@@ -134,8 +137,7 @@ router.get('/printify/catalog-view', requireShopifyProxy, async function (req, r
   }
 });
 
-// VARIANTET: per nje produkt te zgjedhur, kthen print provider-in e pare
-// dhe variantet (ngjyra + madhesi). Frontend-i e perdor per te ndertuar formen.
+// VARIANTET: per nje produkt, kthen print provider-in e pare dhe variantet.
 router.get('/printify/blueprint/:id/variants', requireShopifyProxy, async function (req, res) {
   try {
     const blueprintId = req.params.id;
@@ -143,20 +145,17 @@ router.get('/printify/blueprint/:id/variants', requireShopifyProxy, async functi
       return res.status(400).json({ ok: false, error: 'Produkt i palejuar.' });
     }
 
-    // 1) Print providers per kete produkt.
     const providers = await printifyFetch('/catalog/blueprints/' + blueprintId + '/print_providers.json');
     if (!Array.isArray(providers) || providers.length === 0) {
       return res.status(404).json({ ok: false, error: 'Nuk u gjet print provider.' });
     }
-    const provider = providers[0]; // marrim te parin per thjeshtesi
+    const provider = providers[0];
 
-    // 2) Variantet per kete produkt + provider.
     const variantsData = await printifyFetch(
       '/catalog/blueprints/' + blueprintId + '/print_providers/' + provider.id + '/variants.json'
     );
     const variants = (variantsData && variantsData.variants) || [];
 
-    // Nxjerrim ngjyrat dhe madhesite unike (per menu).
     const colors = [];
     const sizes = [];
     variants.forEach(function (v) {
@@ -178,6 +177,76 @@ router.get('/printify/blueprint/:id/variants', requireShopifyProxy, async functi
         return { id: v.id, color: v.options && v.options.color, size: v.options && v.options.size };
       })
     });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+// NGARKIM IMAZHI: merr nje imazh (base64 ose URL) dhe e ngarkon te Printify.
+router.post('/printify/upload-image', requireShopifyProxy, express.json({ limit: '15mb' }), async function (req, res) {
+  try {
+    const body = req.body || {};
+    const fileName = body.fileName || 'design.png';
+    let payload;
+
+    if (body.imageBase64) {
+      payload = { file_name: fileName, contents: body.imageBase64 };
+    } else if (body.imageUrl) {
+      payload = { file_name: fileName, url: body.imageUrl };
+    } else {
+      return res.status(400).json({ ok: false, error: 'Mungon imazhi (imageBase64 ose imageUrl).' });
+    }
+
+    const uploaded = await printifyFetch('/uploads/images.json', { method: 'POST', body: payload });
+    res.json({ ok: true, imageId: uploaded.id, preview: uploaded.preview_url || null });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+// KRIJIM PRODUKTI (DRAFT): krijon nje produkt te Printify pa e publikuar.
+router.post('/printify/create-product', requireShopifyProxy, express.json({ limit: '2mb' }), async function (req, res) {
+  try {
+    const b = req.body || {};
+    const blueprintId = parseInt(b.blueprintId, 10);
+    const printProviderId = parseInt(b.printProviderId, 10);
+    const imageId = b.imageId;
+    const title = (b.title || '').trim();
+    const variantIds = Array.isArray(b.variantIds) ? b.variantIds : [];
+    const price = parseInt(b.price, 10) || 2499; // ne cent (2499 = 24.99)
+
+    if (!isSelected(blueprintId)) {
+      return res.status(400).json({ ok: false, error: 'Produkt i palejuar.' });
+    }
+    if (!printProviderId || !imageId || !title || variantIds.length === 0) {
+      return res.status(400).json({ ok: false, error: 'Te dhena te paplota (provider, imazh, titull, variante).' });
+    }
+
+    const shopId = await getShopId();
+
+    const variants = variantIds.map(function (vid) {
+      return { id: parseInt(vid, 10), price: price, is_enabled: true };
+    });
+
+    const printAreas = [{
+      variant_ids: variantIds.map(function (vid) { return parseInt(vid, 10); }),
+      placeholders: [{
+        position: 'front',
+        images: [{ id: imageId, x: 0.5, y: 0.5, scale: 1, angle: 0 }]
+      }]
+    }];
+
+    const payload = {
+      title: title,
+      description: 'Created via Seller Program.',
+      blueprint_id: blueprintId,
+      print_provider_id: printProviderId,
+      variants: variants,
+      print_areas: printAreas
+    };
+
+    const created = await printifyFetch('/shops/' + shopId + '/products.json', { method: 'POST', body: payload });
+    res.json({ ok: true, productId: created.id, title: created.title, published: false });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
