@@ -36,9 +36,18 @@ let cachedShopId = null;
 
 async function getShopId() {
   if (cachedShopId) return cachedShopId;
+
+  // Nese e ke caktuar PRINTIFY_SHOP_ID te Railway, perdoret ai.
+  if (process.env.PRINTIFY_SHOP_ID) {
+    cachedShopId = process.env.PRINTIFY_SHOP_ID;
+    return cachedShopId;
+  }
+
   const shops = await printifyFetch('/shops.json');
   if (Array.isArray(shops) && shops.length > 0) {
-    cachedShopId = shops[0].id;
+    // Zgjedh dyqanin Shopify; nese s'ka, merr te parin.
+    const shopify = shops.find(function (s) { return s.sales_channel === 'shopify'; });
+    cachedShopId = (shopify || shops[0]).id;
     return cachedShopId;
   }
   throw new Error('Nuk u gjet asnje dyqan ne llogarine Printify.');
