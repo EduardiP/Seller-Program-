@@ -107,4 +107,40 @@ router.get('/printify/catalog', requireShopifyProxy, async function (req, res) {
   }
 });
 
+// FAQE PROVIZORE: tregon produktet (t-shirt/tank) me foto, titull dhe id.
+// Hape ne browser: /apps/seller-program/printify/catalog-view
+router.get('/printify/catalog-view', requireShopifyProxy, async function (req, res) {
+  try {
+    const blueprints = await printifyFetch('/catalog/blueprints.json');
+    let list = (blueprints || []).filter(function (b) { return isTopwear(b.title); });
+    if (req.query.all === '1') {
+      list = blueprints || [];
+    }
+
+    let cards = '';
+    list.forEach(function (b) {
+      const img = (b.images && b.images[0]) || '';
+      cards +=
+        '<div style="border:1px solid #ddd;border-radius:8px;padding:8px;width:180px;font-family:sans-serif;">' +
+          '<img src="' + img + '" style="width:100%;height:160px;object-fit:cover;border-radius:6px;" loading="lazy">' +
+          '<div style="font-size:13px;margin-top:6px;font-weight:600;">' + b.title + '</div>' +
+          '<div style="font-size:12px;color:#666;">' + (b.brand || '') + '</div>' +
+          '<div style="font-size:14px;color:#111;margin-top:4px;">ID: <b>' + b.id + '</b></div>' +
+        '</div>';
+    });
+
+    const html =
+      '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>Catalog</title></head><body style="margin:0;padding:16px;background:#fafafa;">' +
+      '<h2 style="font-family:sans-serif;">Produktet (' + list.length + ') — shenoji ID-te qe do</h2>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:12px;">' + cards + '</div>' +
+      '</body></html>';
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (e) {
+    res.status(500).send('Error: ' + e.message);
+  }
+});
+
 module.exports = { router, printifyFetch, getShopId };
