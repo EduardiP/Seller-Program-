@@ -9,6 +9,16 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_IMAGE_URL = 'https://api.openai.com/v1/images/generations';
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 
+// Stili yt i fshehur — shtohet te cdo prompt imazhi.
+// Me realiste (jo cartoon), vintage, dhe PA kontur/buze ne skaje.
+const STYLE_SUFFIX =
+  ', detailed vintage illustration style, semi-realistic animal with rich texture and depth, ' +
+  'retro muted color palette, slightly aged vintage look, expressive and characterful, ' +
+  'NOT flat cartoon, NOT simple cartoon, ' +
+  'clean cutout with NO white outline, NO border, NO halo, NO stroke around the edges, ' +
+  'subject blends cleanly into transparent background, ' +
+  'transparent background, isolated subject, no background, high quality, high detail';
+
 // AI #1 (regjisori): vendos vete tekstin funny, kafshen dhe mimiken.
 async function generateConcept() {
   const systemPrompt =
@@ -132,9 +142,7 @@ router.get('/ai/test-concept', requireShopifyProxy, async function (req, res) {
 // TEST: gjeneron nje kafshe funny dhe e kthen si imazh.
 router.get('/ai/test-image', requireShopifyProxy, async function (req, res) {
   try {
-    const prompt = 'A funny cartoon cat with an exaggerated shocked expression, ' +
-      'big eyes, vintage style, bold colors, transparent background, sticker style, high quality, ' +
-      'isolated subject, no background';
+    const prompt = 'A funny squirrel with an exaggerated shocked expression, big eyes' + STYLE_SUFFIX;
     const b64 = await generateImage(prompt);
     const buffer = Buffer.from(b64, 'base64');
     res.set('Content-Type', 'image/png');
@@ -148,9 +156,7 @@ router.get('/ai/test-image', requireShopifyProxy, async function (req, res) {
 router.get('/ai/test-full', requireShopifyProxy, async function (req, res) {
   try {
     const concept = await generateConcept();
-    const fullPrompt = concept.imagePrompt +
-      ', vintage funny cartoon style, bold colors, exaggerated expression, ' +
-      'transparent background, sticker style, isolated subject, no background, high quality';
+    const fullPrompt = concept.imagePrompt + STYLE_SUFFIX;
     const b64 = await generateImage(fullPrompt);
     const buffer = Buffer.from(b64, 'base64');
     res.set('Content-Type', 'image/png');
@@ -165,9 +171,7 @@ router.get('/ai/test-design', requireShopifyProxy, async function (req, res) {
   try {
     const { composeDesign } = require('./compose');
     const concept = await generateConcept();
-    const fullPrompt = concept.imagePrompt +
-      ', vintage funny cartoon style, bold colors, exaggerated expression, ' +
-      'transparent background, sticker style, isolated subject, no background, high quality';
+    const fullPrompt = concept.imagePrompt + STYLE_SUFFIX;
     const animalB64 = await generateImage(fullPrompt);
     const position = (concept.textPosition === 'side') ? 'side' : 'top';
     const finalBuffer = await composeDesign(animalB64, concept.text, { position: position });
