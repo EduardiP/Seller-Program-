@@ -44,6 +44,9 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT now()
     );
   `);
+  await pool.query(`
+    ALTER TABLE designs ADD COLUMN IF NOT EXISTS public_id TEXT;
+  `);
   console.log('Tabelat partners, products dhe designs jane gati.');
 }
 module.exports = { pool, initDb };
