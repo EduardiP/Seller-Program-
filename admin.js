@@ -1,6 +1,23 @@
 // admin.js — paneli i adminimit (brenda Shopify admin te app-i).
 const express = require('express');
 const { generateConcept, generateImage } = require('./ai');
+const { pool } = require('./db');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+async function uploadToCloudinary(b64) {
+  const dataUri = 'data:image/png;base64,' + b64;
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: 'seller-designs',
+    resource_type: 'image'
+  });
+  return result.secure_url;
+}
 
 const router = express.Router();
 
@@ -27,7 +44,16 @@ router.get('/admin/generate-one', requireAdmin, async function (req, res) {
     const concept = await generateConcept();
     const prompt = buildDesignPrompt(concept);
     const b64 = await generateImage(prompt);
-    res.json({ ok: true, concept: concept, image: b64 });
+
+    const imageUrl = await uploadToCloudinary(b64);
+
+    const saved = await pool.query(
+      `INSERT INTO designs (image_url, caption, caption_sq, animal, status)
+       VALUES ($1, $2, $3, $4, 'pending') RETURNING id`,
+      [imageUrl, concept.text || '', concept.albanian || '', concept.animal || '']
+    );
+
+    res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: imageUrl });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
@@ -81,7 +107,7 @@ function buildAdminHtml(token) {
     '  var card = document.createElement("div");' +
     '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
     '  card.innerHTML =' +
-    '    \'<img src="data:image/png;base64,\' + res.image + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
+    '    \'<img src="\' + res.imageUrl + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
     '    \'<p style="font-size:13px;color:#444;margin:8px 0 8px;font-weight:600;">\' + (res.concept.albanian || res.concept.text || "") + \'</p>\' +' +
     '    \'<div style="display:flex;gap:8px;">\' +' +
     '      \'<button class="approve" style="flex:1;padding:8px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Prano</button>\' +' +
