@@ -16,7 +16,7 @@ async function uploadToCloudinary(b64) {
     folder: 'seller-designs',
     resource_type: 'image'
   });
-  return result.secure_url;
+  return { url: result.secure_url, publicId: result.public_id };
 }
 
 const router = express.Router();
@@ -50,13 +50,13 @@ router.get('/admin/generate-one', requireAdmin, async function (req, res) {
     const concept = await generateConcept();
     const prompt = buildDesignPrompt(concept);
     const b64 = await generateImage(prompt);
-    const imageUrl = await uploadToCloudinary(b64);
+    const uploaded = await uploadToCloudinary(b64);
     const saved = await pool.query(
-      `INSERT INTO designs (image_url, caption, caption_sq, animal, status)
-       VALUES ($1, $2, $3, $4, 'pending') RETURNING id`,
-      [imageUrl, concept.text || '', concept.albanian || '', concept.animal || '']
+      `INSERT INTO designs (image_url, public_id, caption, caption_sq, animal, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
+      [uploaded.url, uploaded.publicId, concept.text || '', concept.albanian || '', concept.animal || '']
     );
-    res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: imageUrl });
+    res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: uploaded.url });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
@@ -69,6 +69,21 @@ router.get('/admin/pending', requireAdmin, async function (req, res) {
          FROM designs WHERE status = 'pending' ORDER BY created_at DESC`
     );
     res.json({ ok: true, designs: result.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
+router.get('/admin/reject', requireAdmin, async function (req, res) {
+  try {
+    const id = parseInt(req.query.id, 10);
+    if (!id) return res.status(400).json({ ok: false, error: 'Mungon id.' });
+    const r = await pool.query('SELECT public_id FROM designs WHERE id = $1', [id]);
+    if (r.rows.length > 0 && r.rows[0].public_id) {
+      try { await cloudinary.uploader.destroy(r.rows[0].public_id); } catch (ce) { console.error('Cloudinary destroy:', ce.message); }
+    }
+    await pool.query('DELETE FROM designs WHERE id = $1', [id]);
+    res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
@@ -104,7 +119,7 @@ function buildAdminHtml(token) {
     'genBtn.addEventListener("click", function () {' +
     '  var count = parseInt(document.getElementById("count").value, 10) || 1;' +
     '  if (count < 1) count = 1; if (count > 20) count = 20;' +
-    '  genBtn.disabled = true; grid.innerHTML = "";' +
+    '  genBtn.disabled = true;' +
     '  generateNext(0, count);' +
     '});' +
     'function generateNext(i, total) {' +
@@ -118,6 +133,11 @@ function buildAdminHtml(token) {
     '    })' +
     '    .catch(function () { addError("Nuk u lidh dot"); generateNext(i + 1, total); });' +
     '}' +
+    'function addError(msg) {' +
+    '  var d = document.createElement("div");' +
+    '  d.style.cssText = "background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:12px;color:#a12;";' +
+    '  d.textContent = msg; grid.appendChild(d);' +
+    '}' +
     'function addSavedCard(d) {' +
     '  var card = document.createElement("div");' +
     '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
@@ -130,14 +150,15 @@ function buildAdminHtml(token) {
     '    \'</div>\';' +
     '  var approve = card.querySelector(".approve");' +
     '  var reject = card.querySelector(".reject");' +
-    '  reject.addEventListener("click", function () { card.remove(); });' +
+    '  reject.addEventListener("click", function () {' +
+    '    reject.textContent = "..."; reject.disabled = true;' +
+    '    fetch("/admin/reject?id=" + d.id + "&token=" + encodeURIComponent(TOKEN))' +
+    '      .then(function (r) { return r.json(); })' +
+    '      .then(function (res) { if (res.ok) { card.remove(); } else { reject.textContent = "Gabim"; reject.disabled = false; } })' +
+    '      .catch(function () { reject.textContent = "Gabim"; reject.disabled = false; });' +
+    '  });' +
     '  approve.addEventListener("click", function () { approve.textContent = "Se shpejti..."; approve.disabled = true; });' +
     '  grid.appendChild(card);' +
-    '}' +
-    'function addError(msg) {' +
-    '  var d = document.createElement("div");' +
-    '  d.style.cssText = "background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:12px;color:#a12;";' +
-    '  d.textContent = msg; grid.appendChild(d);' +
     '}' +
     'function loadPending() {' +
     '  grid.innerHTML = "";' +
