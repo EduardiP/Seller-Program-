@@ -52,7 +52,8 @@ async function generateImage(prompt, options) {
 router.get('/ai/test-image', requireShopifyProxy, async function (req, res) {
   try {
     const prompt = 'A funny cartoon cat with an exaggerated shocked expression, ' +
-      'big eyes, vintage style, bold colors, solid white background, sticker style, high quality';
+      'big eyes, vintage style, bold colors, transparent background, sticker style, high quality, ' +
+      'isolated subject, no background';
     const b64 = await generateImage(prompt);
     const buffer = Buffer.from(b64, 'base64');
     res.set('Content-Type', 'image/png');
