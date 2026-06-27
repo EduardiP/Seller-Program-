@@ -181,4 +181,28 @@ router.get('/ai/test-design', requireShopifyProxy, async function (req, res) {
   }
 });
 
+// TEST: Mundesia 1 — AI gjeneron TERE dizajnin (kafshe + tekst + stil), si nje poster t-shirt.
+router.get('/ai/test-design-ai', requireShopifyProxy, async function (req, res) {
+  try {
+    const concept = await generateConcept();
+    const designPrompt =
+      'A vintage retro t-shirt graphic design on a fully transparent background. ' +
+      'Featuring ' + concept.animal + ' with a ' + concept.expression + ' expression, ' +
+      'drawn in a distressed vintage halftone screen-print style (black ink with a warm burnt-orange and cream accent color). ' +
+      'Behind the animal there is a retro sunset circle with mountains and pine trees silhouette. ' +
+      'The funny caption text reads exactly: "' + concept.text + '". ' +
+      'The text is large, bold, hand-lettered, in a mix of grunge brush and condensed vintage fonts, ' +
+      'split across multiple lines, alternating between black and burnt-orange colors, ' +
+      'arranged artistically around the animal so text and animal share the space without overlapping. ' +
+      'Highly polished professional t-shirt print design, distressed vintage texture, ' +
+      'transparent background, no photo background, sticker-ready, high quality.';
+    const b64 = await generateImage(designPrompt);
+    const buffer = Buffer.from(b64, 'base64');
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
 module.exports = { router, generateImage, generateConcept };
