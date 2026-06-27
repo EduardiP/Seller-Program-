@@ -4,8 +4,6 @@ const { generateConcept, generateImage } = require('./ai');
 
 const router = express.Router();
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'changeme';
-
 function requireAdmin(req, res, next) {
   next();
 }
@@ -24,7 +22,6 @@ function buildDesignPrompt(concept) {
     'transparent background, no photo background, sticker-ready, high quality.';
 }
 
-// API: gjeneron NJE imazh dhe e kthen (base64 + koncepti).
 router.get('/admin/generate-one', requireAdmin, async function (req, res) {
   try {
     const concept = await generateConcept();
@@ -36,7 +33,6 @@ router.get('/admin/generate-one', requireAdmin, async function (req, res) {
   }
 });
 
-// FAQJA e panelit (rruga kryesore /).
 router.get('/', function (req, res) {
   const token = req.query.token || '';
   res.set('Content-Type', 'text/html; charset=utf-8');
@@ -87,7 +83,7 @@ function buildAdminHtml(token) {
     '  card.innerHTML =' +
     '    \'<img src="data:image/png;base64,\' + res.image + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
     '    \'<p style="font-size:13px;color:#444;margin:8px 0 4px;font-weight:600;">\' + (res.concept.text || "") + \'</p>\' +' +
-         \'<p style="font-size:12px;color:#777;margin:0 0 8px;font-style:italic;">\' + (res.concept.albanian || "") + \'</p>\' +' +
+    '    \'<p style="font-size:12px;color:#777;margin:0 0 8px;font-style:italic;">\' + (res.concept.albanian || "") + \'</p>\' +' +
     '    \'<div style="display:flex;gap:8px;">\' +' +
     '      \'<button class="approve" style="flex:1;padding:8px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Prano</button>\' +' +
     '      \'<button class="reject" style="flex:1;padding:8px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;">Refuzo</button>\' +' +
