@@ -143,4 +143,21 @@ router.get('/ai/test-image', requireShopifyProxy, async function (req, res) {
   }
 });
 
+// TEST: lidh AI #1 + AI #2 — shpik konceptin, pastaj gjeneron imazhin e tij.
+router.get('/ai/test-full', requireShopifyProxy, async function (req, res) {
+  try {
+    const concept = await generateConcept();
+    // Forcojme stilin tone te imagePrompt-i.
+    const fullPrompt = concept.imagePrompt +
+      ', vintage funny cartoon style, bold colors, exaggerated expression, ' +
+      'transparent background, sticker style, isolated subject, no background, high quality';
+    const b64 = await generateImage(fullPrompt);
+    const buffer = Buffer.from(b64, 'base64');
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
 module.exports = { router, generateImage, generateConcept };
