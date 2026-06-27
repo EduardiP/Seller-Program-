@@ -28,6 +28,7 @@ async function generateConcept() {
     '5) Avoid food-related jokes unless truly exceptional. ' +
     'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
     '{"text": "the funny caption", "animal": "the animal", "expression": "the facial expression", ' +
+    '"textPosition": "top or side (choose what fits best, usually top)", ' +
     '"imagePrompt": "a detailed prompt to generate the animal in vintage funny style"}';
   // Nje shtyse e rastesishme per te shmangur perseritjen e temave.
   const themes = [
@@ -143,11 +144,10 @@ router.get('/ai/test-image', requireShopifyProxy, async function (req, res) {
   }
 });
 
-// TEST: lidh AI #1 + AI #2 — shpik konceptin, pastaj gjeneron imazhin e tij.
+// TEST: lidh AI #1 + AI #2 — shpik konceptin, pastaj gjeneron imazhin e tij (pa tekst).
 router.get('/ai/test-full', requireShopifyProxy, async function (req, res) {
   try {
     const concept = await generateConcept();
-    // Forcojme stilin tone te imagePrompt-i.
     const fullPrompt = concept.imagePrompt +
       ', vintage funny cartoon style, bold colors, exaggerated expression, ' +
       'transparent background, sticker style, isolated subject, no background, high quality';
@@ -155,6 +155,24 @@ router.get('/ai/test-full', requireShopifyProxy, async function (req, res) {
     const buffer = Buffer.from(b64, 'base64');
     res.set('Content-Type', 'image/png');
     res.send(buffer);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+// TEST: rrjedha e plote — koncept + kafshe + tekst i stilizuar = dizajn final.
+router.get('/ai/test-design', requireShopifyProxy, async function (req, res) {
+  try {
+    const { composeDesign } = require('./compose');
+    const concept = await generateConcept();
+    const fullPrompt = concept.imagePrompt +
+      ', vintage funny cartoon style, bold colors, exaggerated expression, ' +
+      'transparent background, sticker style, isolated subject, no background, high quality';
+    const animalB64 = await generateImage(fullPrompt);
+    const position = (concept.textPosition === 'side') ? 'side' : 'top';
+    const finalBuffer = await composeDesign(animalB64, concept.text, { position: position });
+    res.set('Content-Type', 'image/png');
+    res.send(finalBuffer);
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
