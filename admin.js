@@ -7,10 +7,6 @@ const router = express.Router();
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'changeme';
 
 function requireAdmin(req, res, next) {
-  const token = req.query.token || req.headers['x-admin-token'];
-  if (token !== ADMIN_TOKEN) {
-    return res.status(401).send('I paautorizuar. Shto ?token=... ne URL.');
-  }
   next();
 }
 
