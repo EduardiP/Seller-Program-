@@ -35,8 +35,11 @@ function buildDesignPrompt(concept) {
     'sometimes minimal — explore different vintage layouts, do not always use the same sunset-mountains-trees scene. ' +
     'Use a warm retro color palette (black, burnt-orange, cream, muted tones), but vary accent colors between designs. ' +
     'The funny caption text reads exactly: "' + concept.text + '". ' +
+    'CRITICAL LAYOUT RULE: the text and the animal must NEVER overlap. ' +
+    'The text must be placed in its own clear empty area (above and/or below the animal), ' +
+    'sitting directly on the transparent background, fully separated from the animal, ' +
+    'never written on top of the animal, never blended into the animal. ' +
     'The text is large, bold, hand-lettered, in a mix of grunge brush and condensed vintage fonts, ' +
-    'arranged artistically so text and animal share the space without overlapping, ' +
     'all text fully inside the frame with margin, nothing cut off. ' +
     'Polished professional t-shirt print, distressed vintage texture, ' +
     'transparent background, no photo background, sticker-ready, high quality.';
