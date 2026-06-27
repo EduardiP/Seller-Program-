@@ -32,6 +32,18 @@ async function initDb() {
       created_at TIMESTAMPTZ DEFAULT now()
     );
   `);
-  console.log('Tabelat partners dhe products jane gati.');
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS designs (
+      id SERIAL PRIMARY KEY,
+      image_url TEXT NOT NULL,
+      caption TEXT,
+      caption_sq TEXT,
+      animal TEXT,
+      status TEXT DEFAULT 'pending',
+      printify_product_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT now()
+    );
+  `);
+  console.log('Tabelat partners, products dhe designs jane gati.');
 }
 module.exports = { pool, initDb };
