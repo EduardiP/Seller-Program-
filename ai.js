@@ -38,7 +38,7 @@ async function generateConcept() {
     'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
     '{"text": "the funny caption", "animal": "the animal", "expression": "the facial expression", ' +
     '"textPosition": "top or side (choose what fits best, usually top)", ' +
-    '"albanian": "translate the caption to Albanian AND briefly explain in Albanian what the joke means and why it is funny (the connotation)", ' +
+    '"albanian": "a faithful, natural Albanian translation of the caption ONLY, no explanation, no commentary, just the translated caption", ' +
     '"imagePrompt": "a detailed prompt to generate the animal in vintage funny style"}';
   // Nje shtyse e rastesishme per te shmangur perseritjen e temave.
   const themes = [
