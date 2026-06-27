@@ -29,6 +29,16 @@ async function generateConcept() {
     'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
     '{"text": "the funny caption", "animal": "the animal", "expression": "the facial expression", ' +
     '"imagePrompt": "a detailed prompt to generate the animal in vintage funny style"}';
+  // Nje shtyse e rastesishme per te shmangur perseritjen e temave.
+  const themes = [
+    'procrastination', 'being tired', 'social awkwardness', 'introvert life',
+    'Monday and work', 'overthinking', 'being lazy', 'avoiding people',
+    'pretending to be fine', 'weekend vs reality', 'being broke', 'petty revenge',
+    'trust issues', 'anxiety', 'self-control', 'getting older', 'bad decisions',
+    'staying in bed', 'ignoring responsibilities', 'small victories'
+  ];
+  const pick = themes[Math.floor(Math.random() * themes.length)];
+
   const res = await fetch(OPENAI_CHAT_URL, {
     method: 'POST',
     headers: {
@@ -39,9 +49,9 @@ async function generateConcept() {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Invent one funny animal meme concept now. Make it as funny as possible.' }
+        { role: 'user', content: 'Invent one genuinely funny animal meme concept now, loosely inspired by the theme: "' + pick + '". Make it relatable and actually funny, not random.' }
       ],
-      temperature: 1.0
+      temperature: 1.1
     })
   });
 
