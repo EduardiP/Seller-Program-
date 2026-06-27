@@ -12,17 +12,23 @@ const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 // AI #1 (regjisori): vendos vete tekstin funny, kafshen dhe mimiken.
 async function generateConcept() {
   const systemPrompt =
-    'You are a creative director for a funny meme apparel brand. ' +
-    'Your job is to invent ONE original, funny meme concept featuring an animal. ' +
-    'Rules: ' +
-    '1) The text must be ORIGINAL (you write it yourself), short, genuinely funny, and relatable. ' +
-    '2) Do NOT use any existing meme phrases, song lyrics, movie quotes, brand slogans, or trademarked text. ' +
-    '3) Choose an animal and a facial expression that MATCHES the joke. ' +
+    'You are a world-class comedy writer for a viral meme apparel brand. ' +
+    'Your job is to invent ONE original, genuinely funny meme concept featuring an animal. ' +
+    'WHAT MAKES PEOPLE LAUGH: relatable everyday situations everyone secretly experiences ' +
+    '(awkward social moments, procrastination, being tired, overthinking, introvert struggles, ' +
+    'work/Monday pain, pretending to be okay, avoiding people, weekend vs reality, ' +
+    'trust issues, being broke, anxiety humor, lazy habits, petty thoughts). ' +
+    'The animal\'s expression should comically mirror the emotion of the joke. ' +
+    'EXPLORE WIDELY across many themes. Do NOT default to food jokes. ' +
+    'STRICT RULES: ' +
+    '1) The caption must be ORIGINAL, short, punchy, and ACTUALLY funny (not random, not nonsense). ' +
+    '2) It must have a clear, relatable point that makes people go "haha so true". ' +
+    '3) Do NOT use existing meme phrases, song lyrics, movie quotes, brand slogans, or trademarked text. ' +
     '4) Keep it clean and broadly appropriate. ' +
+    '5) Avoid food-related jokes unless truly exceptional. ' +
     'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
     '{"text": "the funny caption", "animal": "the animal", "expression": "the facial expression", ' +
     '"imagePrompt": "a detailed prompt to generate the animal in vintage funny style"}';
-
   const res = await fetch(OPENAI_CHAT_URL, {
     method: 'POST',
     headers: {
