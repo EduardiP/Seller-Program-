@@ -17,6 +17,8 @@ async function generateImage(prompt, options) {
     prompt: prompt,
     n: 1,
     size: options.size || '1024x1024'
+    background: 'transparent',
+    output_format: 'png'
   };
 
   const res = await fetch(OPENAI_IMAGE_URL, {
