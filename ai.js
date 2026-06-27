@@ -12,13 +12,12 @@ const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 // Stili yt i fshehur — shtohet te cdo prompt imazhi.
 // Me realiste (jo cartoon), vintage, dhe PA kontur/buze ne skaje.
 const STYLE_SUFFIX =
-  ', detailed vintage illustration style, semi-realistic animal with rich texture and depth, ' +
-  'retro muted color palette, slightly aged vintage look, expressive and characterful, ' +
-  'NOT flat cartoon, NOT simple cartoon, ' +
+  ', funny expressive character with an exaggerated comedic facial expression, ' +
+  'vintage retro illustration style, slightly aged muted color palette, ' +
+  'a bit more detailed and painterly than flat cartoon but still playful and humorous, ' +
   'clean cutout with NO white outline, NO border, NO halo, NO stroke around the edges, ' +
-  'subject blends cleanly into transparent background, ' +
-  'transparent background, isolated subject, no background, high quality, high detail';
-
+  'subject blends cleanly into the transparent background, ' +
+  'transparent background, isolated subject, no background, high quality';
 // AI #1 (regjisori): vendos vete tekstin funny, kafshen dhe mimiken.
 async function generateConcept() {
   const systemPrompt =
