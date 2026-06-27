@@ -44,18 +44,27 @@ router.get('/admin/generate-one', requireAdmin, async function (req, res) {
     const concept = await generateConcept();
     const prompt = buildDesignPrompt(concept);
     const b64 = await generateImage(prompt);
-
     const imageUrl = await uploadToCloudinary(b64);
-
     const saved = await pool.query(
       `INSERT INTO designs (image_url, caption, caption_sq, animal, status)
        VALUES ($1, $2, $3, $4, 'pending') RETURNING id`,
       [imageUrl, concept.text || '', concept.albanian || '', concept.animal || '']
     );
-
     res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: imageUrl });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+router.get('/admin/pending', requireAdmin, async function (req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT id, image_url, caption, caption_sq, animal, created_at
+         FROM designs WHERE status = 'pending' ORDER BY created_at DESC`
+    );
+    res.json({ ok: true, designs: result.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
   }
 });
 
@@ -93,22 +102,22 @@ function buildAdminHtml(token) {
     '  generateNext(0, count);' +
     '});' +
     'function generateNext(i, total) {' +
-    '  if (i >= total) { statusEl.textContent = "Perfunduan " + total + " imazhe."; genBtn.disabled = false; return; }' +
+    '  if (i >= total) { statusEl.textContent = "Perfunduan " + total + " imazhe."; genBtn.disabled = false; loadPending(); return; }' +
     '  statusEl.textContent = "Po gjenerohet " + (i+1) + " nga " + total + "...";' +
     '  fetch("/admin/generate-one?token=" + encodeURIComponent(TOKEN))' +
     '    .then(function (r) { return r.json(); })' +
     '    .then(function (res) {' +
-    '      if (res.ok) { addCard(res); } else { addError(res.error || "Gabim"); }' +
+    '      if (!res.ok) { addError(res.error || "Gabim"); }' +
     '      generateNext(i + 1, total);' +
     '    })' +
     '    .catch(function () { addError("Nuk u lidh dot"); generateNext(i + 1, total); });' +
     '}' +
-    'function addCard(res) {' +
+    'function addSavedCard(d) {' +
     '  var card = document.createElement("div");' +
     '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
     '  card.innerHTML =' +
-    '    \'<img src="\' + res.imageUrl + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
-    '    \'<p style="font-size:13px;color:#444;margin:8px 0 8px;font-weight:600;">\' + (res.concept.albanian || res.concept.text || "") + \'</p>\' +' +
+    '    \'<img src="\' + d.image_url + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
+    '    \'<p style="font-size:13px;color:#444;margin:8px 0 8px;font-weight:600;">\' + (d.caption_sq || d.caption || "") + \'</p>\' +' +
     '    \'<div style="display:flex;gap:8px;">\' +' +
     '      \'<button class="approve" style="flex:1;padding:8px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Prano</button>\' +' +
     '      \'<button class="reject" style="flex:1;padding:8px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;">Refuzo</button>\' +' +
@@ -124,6 +133,16 @@ function buildAdminHtml(token) {
     '  d.style.cssText = "background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:12px;color:#a12;";' +
     '  d.textContent = msg; grid.appendChild(d);' +
     '}' +
+    'function loadPending() {' +
+    '  grid.innerHTML = "";' +
+    '  fetch("/admin/pending?token=" + encodeURIComponent(TOKEN))' +
+    '    .then(function (r) { return r.json(); })' +
+    '    .then(function (res) {' +
+    '      if (res.ok && res.designs) { res.designs.forEach(addSavedCard); }' +
+    '    })' +
+    '    .catch(function () {});' +
+    '}' +
+    'loadPending();' +
     '</script>' +
     '</body></html>';
 }
