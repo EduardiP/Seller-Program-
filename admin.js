@@ -26,16 +26,19 @@ function requireAdmin(req, res, next) {
 }
 
 function buildDesignPrompt(concept) {
-  return 'A vintage retro t-shirt graphic design on a fully transparent background. ' +
-    'Featuring ' + concept.animal + ' with a ' + concept.expression + ' expression, ' +
-    'drawn in a distressed vintage halftone screen-print style (black ink with a warm burnt-orange and cream accent color). ' +
-    'Behind the animal there is a retro sunset circle with mountains and pine trees silhouette. ' +
+  return 'A high-quality vintage retro t-shirt graphic design on a fully transparent background. ' +
+    'The main subject is ' + concept.animal + ' with a strongly exaggerated, comedic ' + concept.expression + ' expression ' +
+    'that clearly and humorously matches the mood of the caption — the facial expression should be the funniest part, very expressive and over-the-top. ' +
+    'Drawn in a distressed vintage screen-print / halftone illustration style. ' +
+    'You may vary the composition freely while staying vintage: ' +
+    'sometimes a retro sunburst or circle, sometimes a simple distressed badge, sometimes just textured background shapes, ' +
+    'sometimes minimal — explore different vintage layouts, do not always use the same sunset-mountains-trees scene. ' +
+    'Use a warm retro color palette (black, burnt-orange, cream, muted tones), but vary accent colors between designs. ' +
     'The funny caption text reads exactly: "' + concept.text + '". ' +
     'The text is large, bold, hand-lettered, in a mix of grunge brush and condensed vintage fonts, ' +
-    'split across multiple lines, alternating between black and burnt-orange colors, ' +
-    'arranged artistically around the animal so text and animal share the space without overlapping, ' +
+    'arranged artistically so text and animal share the space without overlapping, ' +
     'all text fully inside the frame with margin, nothing cut off. ' +
-    'Highly polished professional t-shirt print design, distressed vintage texture, ' +
+    'Polished professional t-shirt print, distressed vintage texture, ' +
     'transparent background, no photo background, sticker-ready, high quality.';
 }
 
