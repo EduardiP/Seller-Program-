@@ -16,7 +16,7 @@ async function generateImage(prompt, options) {
     model: options.model || 'gpt-image-1',
     prompt: prompt,
     n: 1,
-    size: options.size || '1024x1024'
+    size: options.size || '1024x1024',
     background: 'transparent',
     output_format: 'png'
   };
