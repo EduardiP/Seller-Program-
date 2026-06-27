@@ -12,7 +12,7 @@ app.use('/', require('./products').router);  // Printify
 app.use('/', require('./ai').router);        // me vone
 
 app.get('/health', (req, res) => res.send('OK'));
-app.get('/', (req, res) => res.send('Seller program backend eshte gjalle.'));
+app.use('/', require('./admin').router);
 
 initDb()
   .then(() => {
