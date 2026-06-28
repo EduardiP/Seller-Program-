@@ -27,19 +27,25 @@ function requireAdmin(req, res, next) {
 
 function buildTypographyPrompt(concept) {
   var styles = [
-    'bold vintage retro typography with distressed texture, warm muted retro colors, condensed slab fonts',
-    'clean modern minimalist typography, lots of negative space, simple elegant sans-serif, one or two colors',
-    'bold statement typography, one huge word dominating, mixed font sizes, high contrast, strong impact',
-    'retro 70s groovy typography, rounded funky letters, warm earthy palette, playful arrangement',
-    'modern flat vector lettering, geometric clean shapes, bright confident colors, sticker-like',
-    'hand-drawn doodle lettering, casual imperfect hand style, friendly and human, sketchy charm'
+    'a painted brush-script style (explore freely within hand-painted lettering)',
+    'a collegiate / varsity style (explore freely within athletic arched lettering, with or without outline)',
+    'a textured-fill style where letters are filled with subtle patterns or texture (explore freely)',
+    'an outlined / bordered lettering style (explore freely with letter outlines and borders)',
+    'a clean modern minimalist style (explore freely within simple elegant typography)',
+    'a bold statement style (explore freely with one dominant oversized word)',
+    'a vintage retro distressed style (explore freely within worn retro typography)',
+    'an elegant serif fashion style (explore freely within refined high-end serif lettering)',
+    'a chunky rounded bubble-letter style (explore freely within playful bold rounded type)',
+    'a hand-drawn doodle style (explore freely within casual sketchy hand lettering)'
   ];
   var style = styles[Math.floor(Math.random() * styles.length)];
   return 'A professional TEXT-ONLY t-shirt graphic design on a fully transparent background. ' +
     'There is NO image, NO illustration, NO character — only beautifully arranged typography. ' +
     'The design shows exactly this funny slogan as the entire artwork: "' + concept.text + '". ' +
-    'Style: ' + style + '. ' +
-    'The lettering is large, bold, well-composed, balanced, and centered, ' +
+    'Use ' + style + '. Feel free to interpret this style creatively and explore variations, ' +
+    'while keeping it clean and suitable for t-shirt printing. ' +
+    'Use color tastefully; a border or outline on the text is optional depending on what fits the style. ' +
+    'The lettering is large, well-composed, balanced, and centered, ' +
     'arranged across multiple lines for visual rhythm, fully inside the frame with margin, nothing cut off. ' +
     'High-quality print-ready t-shirt typography, crisp clean edges, ' +
     'transparent background, no background shapes, sticker-ready, high resolution.';
