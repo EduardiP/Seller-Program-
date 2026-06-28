@@ -25,6 +25,26 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function buildTypographyPrompt(concept) {
+  var styles = [
+    'bold vintage retro typography with distressed texture, warm muted retro colors, condensed slab fonts',
+    'clean modern minimalist typography, lots of negative space, simple elegant sans-serif, one or two colors',
+    'bold statement typography, one huge word dominating, mixed font sizes, high contrast, strong impact',
+    'retro 70s groovy typography, rounded funky letters, warm earthy palette, playful arrangement',
+    'modern flat vector lettering, geometric clean shapes, bright confident colors, sticker-like',
+    'hand-drawn doodle lettering, casual imperfect hand style, friendly and human, sketchy charm'
+  ];
+  var style = styles[Math.floor(Math.random() * styles.length)];
+  return 'A professional TEXT-ONLY t-shirt graphic design on a fully transparent background. ' +
+    'There is NO image, NO illustration, NO character — only beautifully arranged typography. ' +
+    'The design shows exactly this funny slogan as the entire artwork: "' + concept.text + '". ' +
+    'Style: ' + style + '. ' +
+    'The lettering is large, bold, well-composed, balanced, and centered, ' +
+    'arranged across multiple lines for visual rhythm, fully inside the frame with margin, nothing cut off. ' +
+    'High-quality print-ready t-shirt typography, crisp clean edges, ' +
+    'transparent background, no background shapes, sticker-ready, high resolution.';
+}
+
 function buildDesignPrompt(concept) {
   return 'A high-quality vintage retro t-shirt graphic design on a fully transparent background. ' +
     'The main subject is ' + concept.animal + ' with a strongly exaggerated, comedic ' + concept.expression + ' expression ' +
@@ -55,6 +75,23 @@ router.get('/admin/generate-one', requireAdmin, async function (req, res) {
       `INSERT INTO designs (image_url, public_id, caption, caption_sq, animal, status)
        VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
       [uploaded.url, uploaded.publicId, concept.text || '', concept.albanian || '', concept.animal || '']
+    );
+    res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: uploaded.url });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
+  }
+});
+
+router.get('/admin/generate-text-one', requireAdmin, async function (req, res) {
+  try {
+    const concept = await generateTextConcept();
+    const prompt = buildTypographyPrompt(concept);
+    const b64 = await generateImage(prompt);
+    const uploaded = await uploadToCloudinary(b64);
+    const saved = await pool.query(
+      `INSERT INTO designs (image_url, public_id, caption, caption_sq, animal, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
+      [uploaded.url, uploaded.publicId, concept.text || '', concept.albanian || '', 'text-only']
     );
     res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: uploaded.url });
   } catch (e) {
@@ -106,7 +143,11 @@ function buildAdminHtml(token) {
       '<div style="background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:16px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
         '<label style="font-weight:600;">Sa imazhe:</label>' +
         '<input id="count" type="number" min="1" max="20" value="3" style="width:80px;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:16px;">' +
-        '<button id="gen-btn" style="padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero</button>' +
+        '<button id="gen-btn" style="padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero (me imazh)</button>' +
+        '<span style="width:1px;height:30px;background:#ddd;"></span>' +
+        '<label style="font-weight:600;">Sa tekste:</label>' +
+        '<input id="count-text" type="number" min="1" max="20" value="3" style="width:80px;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:16px;">' +
+        '<button id="gen-text-btn" style="padding:10px 20px;background:#3a3a8a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero (vetem tekst)</button>' +
         '<span id="status" style="color:#666;"></span>' +
       '</div>' +
       '<div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
@@ -119,19 +160,26 @@ function buildAdminHtml(token) {
     'genBtn.addEventListener("click", function () {' +
     '  var count = parseInt(document.getElementById("count").value, 10) || 1;' +
     '  if (count < 1) count = 1; if (count > 20) count = 20;' +
-    '  genBtn.disabled = true;' +
-    '  generateNext(0, count);' +
+    '  genBtn.disabled = true; grid.innerHTML = "";' +
+    '  generateNext(0, count, "/admin/generate-one");' +
     '});' +
-    'function generateNext(i, total) {' +
-    '  if (i >= total) { statusEl.textContent = "Perfunduan " + total + " imazhe."; genBtn.disabled = false; loadPending(); return; }' +
+    'var genTextBtn = document.getElementById("gen-text-btn");' +
+    'genTextBtn.addEventListener("click", function () {' +
+    '  var count = parseInt(document.getElementById("count-text").value, 10) || 1;' +
+    '  if (count < 1) count = 1; if (count > 20) count = 20;' +
+    '  genTextBtn.disabled = true; grid.innerHTML = "";' +
+    '  generateNext(0, count, "/admin/generate-text-one");' +
+    '});' +
+    'function generateNext(i, total, endpoint) {' +
+    '  if (i >= total) { statusEl.textContent = "Perfunduan " + total + "."; genBtn.disabled = false; genTextBtn.disabled = false; loadPending(); return; }' +
     '  statusEl.textContent = "Po gjenerohet " + (i+1) + " nga " + total + "...";' +
-    '  fetch("/admin/generate-one?token=" + encodeURIComponent(TOKEN))' +
+    '  fetch(endpoint + "?token=" + encodeURIComponent(TOKEN))' +
     '    .then(function (r) { return r.json(); })' +
     '    .then(function (res) {' +
     '      if (!res.ok) { addError(res.error || "Gabim"); }' +
-    '      generateNext(i + 1, total);' +
+    '      generateNext(i + 1, total, endpoint);' +
     '    })' +
-    '    .catch(function () { addError("Nuk u lidh dot"); generateNext(i + 1, total); });' +
+    '    .catch(function () { addError("Nuk u lidh dot"); generateNext(i + 1, total, endpoint); });' +
     '}' +
     'function addError(msg) {' +
     '  var d = document.createElement("div");' +
