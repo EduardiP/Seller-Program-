@@ -256,8 +256,16 @@ function buildAdminHtml(token) {
         '<button id="gen-text-btn" style="padding:10px 20px;background:#3a3a8a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero (vetem tekst)</button>' +
         '<span id="status" style="color:#666;"></span>' +
       '</div>' +
- 
-      '<div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
+
+      '<div id="main-view">' +
+        '<button id="show-approved" style="margin-bottom:16px;padding:8px 16px;background:#fff;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:14px;">📁 Te pranuarat</button>' +
+        '<div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
+      '</div>' +
+      '<div id="approved-view" style="display:none;">' +
+        '<button id="back-btn" style="margin-bottom:16px;padding:8px 14px;background:#fff;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:16px;">↰ Kthehu</button>' +
+        '<h2 style="margin:0 0 16px;font-size:18px;">Dizajnet e pranuara</h2>' +
+        '<div id="approved-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
+      '</div>' +
     '</div>' +
  
     '<div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">' +
@@ -379,7 +387,7 @@ function buildAdminHtml(token) {
     '      .catch(function () { msg.textContent = "Nuk u lidh dot."; confirmBtn.disabled = false; confirmBtn.textContent = "Provo prap"; });' +
     '  };' +
     '}' +
- 
+    
     'function loadPending() {' +
     '  grid.innerHTML = "";' +
     '  fetch("/admin/pending?token=" + encodeURIComponent(TOKEN))' +
