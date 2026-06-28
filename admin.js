@@ -1,6 +1,6 @@
 // admin.js — paneli i adminimit (brenda Shopify admin te app-i).
 const express = require('express');
-const { generateConcept, generateImage } = require('./ai');
+const { generateConcept, generateImage, generateTextConcept } = require('./ai');
 const { pool } = require('./db');
 const cloudinary = require('cloudinary').v2;
 
