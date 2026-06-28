@@ -206,4 +206,75 @@ router.get('/ai/test-design-ai', requireShopifyProxy, async function (req, res) 
   }
 });
 
-module.exports = { router, generateImage, generateConcept };
+// AI #1b: shkruan nje thenie funny TE PAVARUR (per dizajne vetem-tekst, pa kafshe/mimike).
+async function generateTextConcept() {
+  const systemPrompt =
+    'You are a world-class comedy writer for a viral typography t-shirt brand. ' +
+    'Your job is to invent ONE original, genuinely funny TEXT-ONLY t-shirt slogan. ' +
+    'There is NO image, NO animal, NO character — only the words. ' +
+    'So the joke must stand completely on its own and must NOT refer to any facial expression, ' +
+    'animal, picture, or visual. ' +
+    'WHAT MAKES PEOPLE LAUGH: relatable everyday situations everyone secretly experiences ' +
+    '(procrastination, being tired, overthinking, introvert life, work/Monday pain, ' +
+    'pretending to be okay, avoiding people, weekend vs reality, being broke, anxiety humor, ' +
+    'lazy habits, petty thoughts, sarcasm, self-deprecating humor). ' +
+    'STRICT RULES: ' +
+    '1) The slogan must be ORIGINAL, short, punchy, and ACTUALLY funny (not random). ' +
+    '2) It must make sense as words alone on a shirt, like a clever quote or statement. ' +
+    '3) Do NOT use existing meme phrases, song lyrics, movie quotes, brand slogans, or trademarked text. ' +
+    '4) Keep it clean and broadly appropriate. ' +
+    'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
+    '{"text": "the funny slogan", ' +
+    '"albanian": "a faithful, natural Albanian translation of the slogan ONLY, no explanation"}';
+
+  const themes = [
+    'procrastination', 'being tired', 'social awkwardness', 'introvert life',
+    'Monday and work', 'overthinking', 'being lazy', 'avoiding people',
+    'pretending to be fine', 'weekend vs reality', 'being broke', 'sarcasm',
+    'trust issues', 'anxiety', 'self-control', 'getting older', 'bad decisions',
+    'staying in bed', 'ignoring responsibilities', 'small victories', 'coffee dependence',
+    'adulting', 'self-deprecating humor'
+  ];
+  const pick = themes[Math.floor(Math.random() * themes.length)];
+
+  const res = await fetch(OPENAI_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + OPENAI_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Invent one genuinely funny text-only t-shirt slogan now, loosely inspired by the theme: "' + pick + '". It must work as words alone, no image.' }
+      ],
+      temperature: 1.1
+    })
+  });
+
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+
+  if (!res.ok) {
+    const err = new Error('OpenAI chat error ' + res.status);
+    err.status = res.status;
+    err.body = data;
+    throw err;
+  }
+
+  const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new Error('Nuk u kthye koncept teksti nga AI.');
+
+  let concept;
+  try {
+    const clean = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    concept = JSON.parse(clean);
+  } catch (e) {
+    throw new Error('Koncepti i tekstit s\'u parsua dot: ' + content);
+  }
+  return concept;
+}
+
+module.exports = { router, generateImage, generateConcept, generateTextConcept };
