@@ -13,6 +13,7 @@ app.use('/', require('./ai').router);        // me vone
 
 app.get('/health', (req, res) => res.send('OK'));
 app.use('/', require('./admin').router);
+app.use('/', require('./pinterest').router);
 
 initDb()
   .then(() => {
