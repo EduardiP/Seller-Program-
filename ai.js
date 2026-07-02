@@ -350,4 +350,61 @@ async function generateVideoConcept(caption, animal) {
   }
   return concept;
 }
-module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept };
+// AI: gjeneron titull + pershkrim + hashtag te optimizuar per SEO/audience per nje video.
+async function generateVideoCaption(caption, animal) {
+  caption = caption || 'funny relatable design';
+  var hasAnimal = animal && animal !== 'text-only';
+  var subject = hasAnimal ? ('a funny ' + animal) : 'a funny character';
+
+  const systemPrompt =
+    'You are an expert social media copywriter and SEO specialist for a funny apparel brand (t-shirts). ' +
+    'You write short, scroll-stopping captions for short funny animal videos posted on TikTok, Instagram Reels and YouTube Shorts. ' +
+    'Your goal: MAXIMIZE reach and reach the RIGHT audience (people who would buy funny relatable t-shirts). ' +
+    'RULES: ' +
+    '1) Write a punchy, natural caption (1-2 short lines) built around the t-shirt message, that makes the target buyer feel "this is me". ' +
+    '2) The caption must feel human and fun, not corporate, not spammy. ' +
+    '3) End with a short call to action to check the link in bio / shop. ' +
+    '4) Provide 8-12 relevant, high-intent hashtags mixing broad + niche keywords (funny apparel, the specific theme, the animal, meme tees, gift ideas) for discovery and SEO. ' +
+    'Avoid banned/spammy tags. No duplicate tags. ' +
+    '5) Keep it clean and broadly appropriate. ' +
+    'Respond ONLY with valid JSON in this exact format: ' +
+    '{"title": "a short SEO-friendly title (max ~60 chars) with a key phrase", ' +
+    '"caption": "the full caption text WITHOUT hashtags", ' +
+    '"hashtags": "space-separated hashtags starting with #"}';
+
+  const res = await fetch(OPENAI_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + OPENAI_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'The video shows ' + subject + ' acting out this t-shirt message: "' + caption + '". Write the title, caption and hashtags, optimized for SEO and for reaching people who buy funny relatable t-shirts.' }
+      ],
+      temperature: 0.9
+    })
+  });
+
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  if (!res.ok) {
+    const err = new Error('OpenAI chat error ' + res.status);
+    err.status = res.status; err.body = data; throw err;
+  }
+  const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new Error('Nuk u kthye titull nga AI.');
+  let out;
+  try {
+    const clean = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    out = JSON.parse(clean);
+  } catch (e) {
+    throw new Error('Titulli s\'u parsua dot: ' + content);
+  }
+  return out;
+}
+
+module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept, generateVideoCaption };
