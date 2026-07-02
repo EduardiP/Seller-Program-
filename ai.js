@@ -292,7 +292,7 @@ async function generateVideoConcept(caption, animal) {
     '1) ONE animal only, behaving like a human, PERFORMING the emotion/situation of the t-shirt message (its expression and actions must match the joke). ' +
     'NO other humans or animals appear. ' +
     '2) The video MUST START with the funniest, most attention-grabbing moment in the first second. ' +
-    '3) The animal is wearing a plain t-shirt with @Element1 printed large and clearly on the chest. Always refer to the printed graphic exactly as @Element1. ' +
+    '3) From the VERY FIRST second and throughout the ENTIRE video, the animal is clearly wearing a plain t-shirt with @Element1 printed large and fully visible on the chest. The @Element1 print must stay clearly visible on the shirt at all times, from start to finish. Always refer to the printed graphic exactly as @Element1. ' +
     '4) The animal must behave in a CONTROLLED, natural way (no chaotic, no glitchy, no uncontrolled movements) — smooth realistic motion only. ' +
     '5) At the very END, the animal proudly shows off the @Element1 print on its chest, then points upward with one finger and clearly says the exact English phrase "link in bio" (keep these three English words untranslated). ' +
     '6) VISUAL STYLE (CRITICAL): 100% photorealistic live-action real footage, shot on a real camera, like a real pet video. ' +
