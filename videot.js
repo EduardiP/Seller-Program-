@@ -28,7 +28,7 @@ router.get('/video/start', async function (req, res) {
       caption = d.rows[0].caption;
       animal = d.rows[0].animal;
     }
-
+ 
     // AI-ja shkruan skenen bazuar te mesazhi (ose ?prompt= manual)
     let prompt = req.query.prompt;
     let albanian = null;
@@ -43,16 +43,15 @@ router.get('/video/start', async function (req, res) {
       headers: { 'Authorization': 'Key ' + FAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: prompt,
-        elements: [{ frontal_image_url: designUrl, reference_image_urls: [designUrl] }],
+        elements: [{ frontal_image_url: designUrl }],
         duration: '5',
         aspect_ratio: '9:16',
-        generate_audio: true,
-        negative_prompt: 'cartoon, anime, animation, animated, CGI, 3D render, Pixar, Disney, illustration, stylized, drawing, painting, low quality, blurry, distorted'
+        generate_audio: true
       })
     });
     const data = await r.json();
     if (!r.ok) return res.status(500).json({ ok: false, error: data });
-    jobs[data.request_id] = { status_url: data.status_url, response_url: data.response_url };
+    jobs[data.request_id] = { status_url: data.status_url, response_url: data.response_url, caption: caption, animal: animal };
     res.json({
       ok: true,
       request_id: data.request_id,
@@ -86,7 +85,7 @@ router.get('/video/check', async function (req, res) {
       else if (result.videos && result.videos[0] && result.videos[0].url) videoUrl = result.videos[0].url;
       else if (result.output && result.output.video && result.output.video.url) videoUrl = result.output.video.url;
     }
-    res.json({ ok: true, status: 'COMPLETED', videoUrl: videoUrl, plot: result });
+    res.json({ ok: true, status: 'COMPLETED', videoUrl: videoUrl, caption: job.caption, animal: job.animal, plot: result });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
