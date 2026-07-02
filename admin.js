@@ -1,18 +1,19 @@
 // admin.js — paneli i adminimit (brenda Shopify admin te app-i).
 // Gjeneron imazhe me AI, i shfaq per miratim, dhe i pranuarit i ben produkte.
-
+// Strukture me tabe: Dizajnet / Mockupet / Videot / Postimet.
+ 
 const express = require('express');
 const { generateConcept, generateImage, generateTextConcept } = require('./ai');
 const { pool } = require('./db');
 const { printifyFetch, getShopId } = require('./products');
 const cloudinary = require('cloudinary').v2;
-
+ 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-
+ 
 // Ngarkon nje imazh base64 te Cloudinary dhe kthen URL-n.
 async function uploadToCloudinary(b64) {
   const dataUri = 'data:image/png;base64,' + b64;
@@ -22,17 +23,13 @@ async function uploadToCloudinary(b64) {
   });
   return { url: result.secure_url, publicId: result.public_id };
 }
-
+ 
 const router = express.Router();
-
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'changeme';
-
+ 
 function requireAdmin(req, res, next) {
   next();
 }
-
-// Stili i dizajnit (i njejti si te test-design-ai).
-// Prompt per dizajne VETEM-TEKST (tipografi, pa imazh). AI zgjedh nje stil te shitur.
+ 
 function buildTypographyPrompt(concept) {
   var styles = [
     'a painted brush-script style (explore freely within hand-painted lettering)',
@@ -47,7 +44,7 @@ function buildTypographyPrompt(concept) {
     'a hand-drawn doodle style (explore freely within casual sketchy hand lettering)'
   ];
   var style = styles[Math.floor(Math.random() * styles.length)];
-
+ 
   return 'A professional TEXT-ONLY t-shirt graphic design on a fully transparent background. ' +
     'There is NO image, NO illustration, NO character — only beautifully arranged typography. ' +
     'The design shows exactly this funny slogan as the entire artwork: "' + concept.text + '". ' +
@@ -59,7 +56,7 @@ function buildTypographyPrompt(concept) {
     'High-quality print-ready t-shirt typography, crisp clean edges, ' +
     'transparent background, no background shapes, sticker-ready, high resolution.';
 }
-
+ 
 function buildDesignPrompt(concept) {
   return 'A high-quality vintage retro t-shirt graphic design on a fully transparent background. ' +
     'The main subject is ' + concept.animal + ' with a strongly exaggerated, comedic ' + concept.expression + ' expression ' +
@@ -76,35 +73,24 @@ function buildDesignPrompt(concept) {
     'Polished professional t-shirt print, distressed vintage texture, ' +
     'transparent background, no photo background, sticker-ready, high quality.';
 }
-
-// API: gjeneron NJE imazh, e ngarkon te Cloudinary, e ruan te baza.
+ 
 router.get('/admin/generate-one', requireAdmin, async function (req, res) {
   try {
     const concept = await generateConcept();
     const prompt = buildDesignPrompt(concept);
     const b64 = await generateImage(prompt);
-
     const uploaded = await uploadToCloudinary(b64);
-
     const saved = await pool.query(
       `INSERT INTO designs (image_url, public_id, caption, caption_sq, animal, status)
        VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id`,
       [uploaded.url, uploaded.publicId, concept.text || '', concept.albanian || '', concept.animal || '']
     );
-
-    res.json({
-      ok: true,
-      id: saved.rows[0].id,
-      concept: concept,
-      imageUrl: uploaded.url
-    });
+    res.json({ ok: true, id: saved.rows[0].id, concept: concept, imageUrl: uploaded.url });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
 });
-
-// API: kthen dizajnet pending (te ruajtura, qe presin miratim).
-// API: gjeneron NJE dizajn VETEM-TEKST, e ngarkon te Cloudinary, e ruan te baza.
+ 
 router.get('/admin/generate-text-one', requireAdmin, async function (req, res) {
   try {
     const concept = await generateTextConcept();
@@ -121,9 +107,7 @@ router.get('/admin/generate-text-one', requireAdmin, async function (req, res) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
 });
-
-// Lista e veshjeve te lejuara per Prano (vetem t-shirt + tank top).
-// Per fillim perdorim te gjithe listen e zgjedhur; do ta ngushtosh kur te konfirmosh id-te.
+ 
 const APPROVE_BLUEPRINT_IDS = [
   5, 6, 9, 10, 12, 14, 15, 26, 88, 100, 139, 142, 145, 184, 279, 281,
   454, 460, 466, 518, 526, 565, 577, 605, 606, 607, 664, 706, 725, 751,
@@ -131,43 +115,30 @@ const APPROVE_BLUEPRINT_IDS = [
   1382, 1459, 1484, 1575, 1585, 1669, 1942, 2039, 2835, 2840, 2842, 2856,
   2910, 2925, 2927, 2964, 3035, 3042, 3104, 3113, 3117, 4131, 4745, 5345
 ];
-
-// API: PRANO — krijon produkt te Printify me veshje te rastesishme.
+ 
 router.get('/admin/approve', requireAdmin, async function (req, res) {
   try {
     const id = parseInt(req.query.id, 10);
     const position = (req.query.position === 'back') ? 'back' : 'front';
     if (!id) return res.status(400).json({ ok: false, error: 'Mungon id.' });
-
-    // Marrim dizajnin nga baza.
     const d = await pool.query('SELECT * FROM designs WHERE id = $1', [id]);
     if (d.rows.length === 0) return res.status(404).json({ ok: false, error: 'Dizajni s\'u gjet.' });
     const design = d.rows[0];
-
-    // 1) Zgjedhim nje veshje rastesisht.
     const blueprintId = APPROVE_BLUEPRINT_IDS[Math.floor(Math.random() * APPROVE_BLUEPRINT_IDS.length)];
-
-    // 2) Marrim print provider-in e pare te kesaj veshjeje.
     const providers = await printifyFetch('/catalog/blueprints/' + blueprintId + '/print_providers.json');
     if (!providers || providers.length === 0) throw new Error('S\'ka print provider per kete veshje.');
     const printProviderId = providers[0].id;
-
-    // 3) Marrim variantet (ngjyra/madhesi) e ketij provider-i.
     const variantsData = await printifyFetch(
       '/catalog/blueprints/' + blueprintId + '/print_providers/' + printProviderId + '/variants.json'
     );
     const allVariants = (variantsData && variantsData.variants) || [];
     if (allVariants.length === 0) throw new Error('S\'ka variante per kete veshje.');
     const variantIds = allVariants.map(function (v) { return v.id; });
-
-    // 4) Ngarkojme imazhin (nga Cloudinary URL) te Printify.
     const uploaded = await printifyFetch('/uploads/images.json', {
       method: 'POST',
       body: { file_name: 'design-' + id + '.png', url: design.image_url }
     });
     const imageId = uploaded.id;
-
-    // 5) Krijojme produktin (draft).
     const shopId = await getShopId();
     const variants = variantIds.map(function (vid) {
       return { id: vid, price: 2499, is_enabled: true };
@@ -188,20 +159,16 @@ router.get('/admin/approve', requireAdmin, async function (req, res) {
       print_areas: printAreas
     };
     const created = await printifyFetch('/shops/' + shopId + '/products.json', { method: 'POST', body: payload });
-
-    // 6) Perditesojme statusin e dizajnit.
     await pool.query(
       `UPDATE designs SET status = 'approved', printify_product_id = $1 WHERE id = $2`,
       [String(created.id), id]
     );
-
     res.json({ ok: true, productId: created.id, blueprintId: blueprintId });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message, detail: e.body || null });
   }
 });
-
-// API: kthen dizajnet e PRANUARA (approved).
+ 
 router.get('/admin/approved', requireAdmin, async function (req, res) {
   try {
     const result = await pool.query(
@@ -213,7 +180,7 @@ router.get('/admin/approved', requireAdmin, async function (req, res) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-
+ 
 router.get('/admin/pending', requireAdmin, async function (req, res) {
   try {
     const result = await pool.query(
@@ -225,13 +192,11 @@ router.get('/admin/pending', requireAdmin, async function (req, res) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-
-// API: REFUZO — fshin imazhin nga Cloudinary dhe rreshtin nga databaza.
+ 
 router.get('/admin/reject', requireAdmin, async function (req, res) {
   try {
     const id = parseInt(req.query.id, 10);
     if (!id) return res.status(400).json({ ok: false, error: 'Mungon id.' });
-
     const r = await pool.query('SELECT public_id FROM designs WHERE id = $1', [id]);
     if (r.rows.length > 0 && r.rows[0].public_id) {
       try { await cloudinary.uploader.destroy(r.rows[0].public_id); } catch (ce) { console.error('Cloudinary destroy:', ce.message); }
@@ -242,46 +207,89 @@ router.get('/admin/reject', requireAdmin, async function (req, res) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
-
-// FAQJA e panelit.
+ 
 router.get('/', function (req, res) {
   const token = req.query.token || '';
   res.set('Content-Type', 'text/html; charset=utf-8');
   res.send(buildAdminHtml(token));
 });
-
+ 
 function buildAdminHtml(token) {
+  var RAILWAY = 'https://seller-program-production.up.railway.app';
   return '<!doctype html><html><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>Seller Program — Admin</title></head>' +
-    '<body style="font-family:system-ui,sans-serif;margin:0;padding:24px;background:#f7f7f8;color:#111;">' +
-    '<div style="max-width:1000px;margin:0 auto;">' +
-      '<h1 style="margin:0 0 8px;">Admin — Gjenerimi i dizajneve</h1>' +
-      '<p style="color:#666;margin:0 0 20px;">Cakto sa imazhe, gjeneroji, dhe prano ato qe te pelqejne.</p>' +
-
-      '<div style="background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:16px;margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
+    '<title>Seller Program — Admin</title>' +
+    '<style>' +
+    'body{font-family:system-ui,sans-serif;margin:0;padding:0;background:#f7f7f8;color:#111;}' +
+    '.wrap{max-width:1000px;margin:0 auto;padding:20px;}' +
+    '.tabs{display:flex;gap:6px;border-bottom:2px solid #e3e3e3;margin-bottom:20px;flex-wrap:wrap;}' +
+    '.tab{padding:12px 20px;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:15px;font-weight:600;color:#888;margin-bottom:-2px;}' +
+    '.tab.active{color:#111;border-bottom-color:#111;}' +
+    '.panel{display:none;}' +
+    '.panel.active{display:block;}' +
+    '.card{background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;}' +
+    '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}' +
+    '.btn{padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;}' +
+    '.btn-green{background:#1a7f37;}' +
+    '.btn-light{background:#fff;border:1px solid #ccc;color:#333;}' +
+    '</style></head>' +
+    '<body><div class="wrap">' +
+    '<h1 style="margin:0 0 16px;">Seller Program — Admin</h1>' +
+ 
+    '<div class="tabs">' +
+      '<button class="tab active" data-tab="dizajnet">Dizajnet</button>' +
+      '<button class="tab" data-tab="mockupet">Mockupet</button>' +
+      '<button class="tab" data-tab="videot">Videot</button>' +
+      '<button class="tab" data-tab="postimet">Postimet</button>' +
+    '</div>' +
+ 
+    // ---- TAB: DIZAJNET ----
+    '<div class="panel active" id="tab-dizajnet">' +
+      '<div class="card" style="margin-bottom:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">' +
         '<label style="font-weight:600;">Sa imazhe:</label>' +
         '<input id="count" type="number" min="1" max="20" value="3" style="width:80px;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:16px;">' +
-        '<button id="gen-btn" style="padding:10px 20px;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero (me imazh)</button>' +
+        '<button id="gen-btn" class="btn">Gjenero (me imazh)</button>' +
         '<span style="width:1px;height:30px;background:#ddd;"></span>' +
         '<label style="font-weight:600;">Sa tekste:</label>' +
         '<input id="count-text" type="number" min="1" max="20" value="3" style="width:80px;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:16px;">' +
-        '<button id="gen-text-btn" style="padding:10px 20px;background:#3a3a8a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:15px;">Gjenero (vetem tekst)</button>' +
+        '<button id="gen-text-btn" class="btn" style="background:#3a3a8a;">Gjenero (vetem tekst)</button>' +
         '<span id="status" style="color:#666;"></span>' +
       '</div>' +
-
       '<div id="main-view">' +
-        '<button id="show-approved" style="margin-bottom:16px;padding:8px 16px;background:#fff;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:14px;">📁 Te pranuarat</button>' +
-        '<div id="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
+        '<button id="show-approved" class="btn-light" style="margin-bottom:16px;padding:8px 16px;border-radius:8px;font-size:14px;">📁 Te pranuarat</button>' +
+        '<div id="grid" class="grid"></div>' +
       '</div>' +
-
       '<div id="approved-view" style="display:none;">' +
-        '<button id="back-btn" style="margin-bottom:16px;padding:8px 14px;background:#fff;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:16px;">↰ Kthehu</button>' +
+        '<button id="back-btn" class="btn-light" style="margin-bottom:16px;padding:8px 14px;border-radius:8px;font-size:16px;">↰ Kthehu</button>' +
         '<h2 style="margin:0 0 16px;font-size:18px;">Dizajnet e pranuara</h2>' +
-        '<div id="approved-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;"></div>' +
+        '<div id="approved-grid" class="grid"></div>' +
       '</div>' +
     '</div>' +
-
+ 
+    // ---- TAB: MOCKUPET ----
+    '<div class="panel" id="tab-mockupet">' +
+      '<p style="color:#666;">Krijo nje mockup: nje dizajn i rastesishem mbi nje veshje.</p>' +
+      '<button id="mock-btn" class="btn">Krijo mockup</button>' +
+      '<div id="mock-out" style="margin-top:16px;"></div>' +
+    '</div>' +
+ 
+    // ---- TAB: VIDEOT ----
+    '<div class="panel" id="tab-videot">' +
+      '<p style="color:#666;">Krijo nje video funny (kafsha vepron mesazhin e dizajnit). Mund te zgjase 1-3 min.</p>' +
+      '<button id="vid-btn" class="btn">Krijo video</button>' +
+      '<div id="vid-status" style="color:#666;margin-top:10px;min-height:22px;"></div>' +
+      '<div id="vid-scene" style="font-size:13px;color:#444;margin-top:6px;"></div>' +
+      '<div id="vid-out" style="margin-top:16px;"></div>' +
+    '</div>' +
+ 
+    // ---- TAB: POSTIMET ----
+    '<div class="panel" id="tab-postimet">' +
+      '<p style="color:#666;">Postimi automatik ne rrjetet sociale (Buffer). Se shpejti.</p>' +
+    '</div>' +
+ 
+    '</div>' +
+ 
+    // ---- MODAL ----
     '<div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">' +
       '<div style="background:#fff;border-radius:12px;padding:20px;max-width:360px;width:90%;text-align:center;">' +
         '<h3 style="margin:0 0 12px;">Prano dizajnin?</h3>' +
@@ -289,82 +297,63 @@ function buildAdminHtml(token) {
         '<p id="modal-text" style="font-size:13px;color:#444;margin:0 0 12px;font-weight:600;"></p>' +
         '<p id="modal-msg" style="font-size:12px;color:#a12;margin:0 0 12px;"></p>' +
         '<div style="display:flex;gap:8px;">' +
-          '<button id="modal-confirm" style="flex:1;padding:10px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Konfirmo</button>' +
-          '<button id="modal-cancel" style="flex:1;padding:10px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;">Anulo</button>' +
+          '<button id="modal-confirm" class="btn btn-green" style="flex:1;">Konfirmo</button>' +
+          '<button id="modal-cancel" class="btn-light" style="flex:1;padding:10px;border-radius:6px;">Anulo</button>' +
         '</div>' +
       '</div>' +
     '</div>' +
-
+ 
     '<script>' +
     'var TOKEN = ' + JSON.stringify(token) + ';' +
+    'var RAILWAY = ' + JSON.stringify(RAILWAY) + ';' +
+ 
+    // ---- TABS ----
+    'var tabs = document.querySelectorAll(".tab");' +
+    'tabs.forEach(function(t){ t.addEventListener("click", function(){' +
+    '  tabs.forEach(function(x){ x.classList.remove("active"); });' +
+    '  document.querySelectorAll(".panel").forEach(function(p){ p.classList.remove("active"); });' +
+    '  t.classList.add("active");' +
+    '  document.getElementById("tab-" + t.getAttribute("data-tab")).classList.add("active");' +
+    '}); });' +
+ 
+    // ---- DIZAJNET ----
     'var genBtn = document.getElementById("gen-btn");' +
     'var statusEl = document.getElementById("status");' +
     'var grid = document.getElementById("grid");' +
-
     'genBtn.addEventListener("click", function () {' +
     '  var count = parseInt(document.getElementById("count").value, 10) || 1;' +
     '  if (count < 1) count = 1; if (count > 20) count = 20;' +
-    '  genBtn.disabled = true;' +
-    '  grid.innerHTML = "";' +
+    '  genBtn.disabled = true; grid.innerHTML = "";' +
     '  generateNext(0, count, "/admin/generate-one");' +
     '});' +
-
     'var genTextBtn = document.getElementById("gen-text-btn");' +
     'genTextBtn.addEventListener("click", function () {' +
     '  var count = parseInt(document.getElementById("count-text").value, 10) || 1;' +
     '  if (count < 1) count = 1; if (count > 20) count = 20;' +
-    '  genTextBtn.disabled = true;' +
-    '  grid.innerHTML = "";' +
+    '  genTextBtn.disabled = true; grid.innerHTML = "";' +
     '  generateNext(0, count, "/admin/generate-text-one");' +
     '});' +
-
     'function generateNext(i, total, endpoint) {' +
     '  if (i >= total) { statusEl.textContent = "Perfunduan " + total + "."; genBtn.disabled = false; genTextBtn.disabled = false; loadPending(); return; }' +
     '  statusEl.textContent = "Po gjenerohet " + (i+1) + " nga " + total + "...";' +
     '  fetch(endpoint + "?token=" + encodeURIComponent(TOKEN))' +
     '    .then(function (r) { return r.json(); })' +
-    '    .then(function (res) {' +
-    '      if (!res.ok) { addError(res.error || "Gabim"); }' +
-    '      generateNext(i + 1, total, endpoint);' +
-    '    })' +
+    '    .then(function (res) { if (!res.ok) { addError(res.error || "Gabim"); } generateNext(i + 1, total, endpoint); })' +
     '    .catch(function () { addError("Nuk u lidh dot"); generateNext(i + 1, total, endpoint); });' +
     '}' +
-
-    'function addCard(res) {' +
-    '  var card = document.createElement("div");' +
-    '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
-    '  card.innerHTML =' +
-    '    \'<img src="\' + res.imageUrl + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
-    '    \'<p style="font-size:13px;color:#444;margin:8px 0 8px;font-weight:600;">\' + (res.concept.albanian || res.concept.text || "") + \'</p>\' +' +
-    '    \'<div style="display:flex;gap:8px;">\' +' +
-    '      \'<button class="approve" style="flex:1;padding:8px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Prano</button>\' +' +
-    '      \'<button class="reject" style="flex:1;padding:8px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;">Refuzo</button>\' +' +
-    '    \'</div>\';' +
-    '  var approve = card.querySelector(".approve");' +
-    '  var reject = card.querySelector(".reject");' +
-    '  reject.addEventListener("click", function () { card.remove(); });' +
-    '  approve.addEventListener("click", function () {' +
-    '    approve.textContent = "Se shpejti..."; approve.disabled = true;' +
-    '  });' +
-    '  grid.appendChild(card);' +
-    '}' +
-
     'function addError(msg) {' +
     '  var d = document.createElement("div");' +
     '  d.style.cssText = "background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:12px;color:#a12;";' +
-    '  d.textContent = msg;' +
-    '  grid.appendChild(d);' +
+    '  d.textContent = msg; grid.appendChild(d);' +
     '}' +
-
     'function addSavedCard(d) {' +
-    '  var card = document.createElement("div");' +
-    '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
+    '  var card = document.createElement("div"); card.className = "card";' +
     '  card.innerHTML =' +
     '    \'<img src="\' + d.image_url + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
     '    \'<p style="font-size:13px;color:#444;margin:8px 0 8px;font-weight:600;">\' + (d.caption_sq || d.caption || "") + \'</p>\' +' +
     '    \'<div style="display:flex;gap:8px;">\' +' +
-    '      \'<button class="approve" style="flex:1;padding:8px;background:#1a7f37;color:#fff;border:none;border-radius:6px;cursor:pointer;">Prano</button>\' +' +
-    '      \'<button class="reject" style="flex:1;padding:8px;background:#eee;color:#333;border:none;border-radius:6px;cursor:pointer;">Refuzo</button>\' +' +
+    '      \'<button class="approve btn btn-green" style="flex:1;padding:8px;">Prano</button>\' +' +
+    '      \'<button class="reject btn-light" style="flex:1;padding:8px;border-radius:6px;">Refuzo</button>\' +' +
     '    \'</div>\';' +
     '  var approve = card.querySelector(".approve");' +
     '  var reject = card.querySelector(".reject");' +
@@ -378,13 +367,11 @@ function buildAdminHtml(token) {
     '  approve.addEventListener("click", function () { openApproveModal(d); });' +
     '  grid.appendChild(card);' +
     '}' +
-
     'function openApproveModal(d) {' +
     '  document.getElementById("modal-img").src = d.image_url;' +
     '  document.getElementById("modal-text").textContent = (d.caption_sq || d.caption || "");' +
     '  var overlay = document.getElementById("modal-overlay");' +
-    '  var msg = document.getElementById("modal-msg");' +
-    '  msg.textContent = "";' +
+    '  var msg = document.getElementById("modal-msg"); msg.textContent = "";' +
     '  overlay.style.display = "flex";' +
     '  var confirmBtn = document.getElementById("modal-confirm");' +
     '  var cancelBtn = document.getElementById("modal-cancel");' +
@@ -401,17 +388,14 @@ function buildAdminHtml(token) {
     '      .catch(function () { msg.textContent = "Nuk u lidh dot."; confirmBtn.disabled = false; confirmBtn.textContent = "Provo prap"; });' +
     '  };' +
     '}' +
-
     'function addApprovedCard(d) {' +
-    '  var card = document.createElement("div");' +
-    '  card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;";' +
+    '  var card = document.createElement("div"); card.className = "card";' +
     '  card.innerHTML =' +
     '    \'<img src="\' + d.image_url + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
     '    \'<p style="font-size:13px;color:#444;margin:8px 0 4px;font-weight:600;">\' + (d.caption_sq || d.caption || "") + \'</p>\' +' +
     '    \'<p style="font-size:11px;color:#1a7f37;margin:0;">✓ Produkt i krijuar\' + (d.printify_product_id ? (" #" + d.printify_product_id) : "") + \'</p>\';' +
     '  approvedGrid.appendChild(card);' +
     '}' +
-
     'function loadApproved() {' +
     '  approvedGrid.innerHTML = "";' +
     '  fetch("/admin/approved?token=" + encodeURIComponent(TOKEN))' +
@@ -421,10 +405,8 @@ function buildAdminHtml(token) {
     '        if (res.designs.length === 0) { approvedGrid.innerHTML = \'<p style="color:#888;">Ende asnje dizajn i pranuar.</p>\'; }' +
     '        else { res.designs.forEach(addApprovedCard); }' +
     '      }' +
-    '    })' +
-    '    .catch(function () {});' +
+    '    }).catch(function () {});' +
     '}' +
-
     'var mainView = document.getElementById("main-view");' +
     'var approvedView = document.getElementById("approved-view");' +
     'var approvedGrid = document.getElementById("approved-grid");' +
@@ -434,20 +416,56 @@ function buildAdminHtml(token) {
     'document.getElementById("back-btn").addEventListener("click", function () {' +
     '  approvedView.style.display = "none"; mainView.style.display = "block";' +
     '});' +
-
     'function loadPending() {' +
     '  grid.innerHTML = "";' +
     '  fetch("/admin/pending?token=" + encodeURIComponent(TOKEN))' +
     '    .then(function (r) { return r.json(); })' +
-    '    .then(function (res) {' +
-    '      if (res.ok && res.designs) { res.designs.forEach(addSavedCard); }' +
-    '    })' +
+    '    .then(function (res) { if (res.ok && res.designs) { res.designs.forEach(addSavedCard); } })' +
     '    .catch(function () {});' +
     '}' +
     'loadPending();' +
-    '</script>' +
-    '</body></html>';
+ 
+    // ---- MOCKUPET ----
+    'var mockBtn = document.getElementById("mock-btn");' +
+    'var mockOut = document.getElementById("mock-out");' +
+    'mockBtn.addEventListener("click", function(){' +
+    '  mockOut.innerHTML = "Po krijohet...";' +
+    '  var url = RAILWAY + "/pinterest/test-mockup?t=" + Date.now();' +
+    '  var img = new Image();' +
+    '  img.onload = function(){ mockOut.innerHTML = ""; img.style.cssText = "max-width:360px;width:100%;border-radius:12px;"; mockOut.appendChild(img); };' +
+    '  img.onerror = function(){ mockOut.innerHTML = "Gabim ne krijimin e mockup-it."; };' +
+    '  img.src = url;' +
+    '});' +
+ 
+    // ---- VIDEOT ----
+    'var vidBtn = document.getElementById("vid-btn");' +
+    'var vidStatus = document.getElementById("vid-status");' +
+    'var vidScene = document.getElementById("vid-scene");' +
+    'var vidOut = document.getElementById("vid-out");' +
+    'vidBtn.addEventListener("click", function(){' +
+    '  vidBtn.disabled = true; vidOut.innerHTML = ""; vidScene.textContent = "";' +
+    '  vidStatus.textContent = "Po nis videon...";' +
+    '  fetch(RAILWAY + "/video/start").then(function(r){return r.json();}).then(function(res){' +
+    '    if(!res.ok){ vidStatus.textContent = "Gabim: " + (res.error && res.error.message || JSON.stringify(res.error)); vidBtn.disabled = false; return; }' +
+    '    if(res.skena){ vidScene.textContent = "Skena: " + res.skena; }' +
+    '    vidStatus.textContent = "Po gjenerohet... (1-3 min)";' +
+    '    pollVideo(res.request_id);' +
+    '  }).catch(function(){ vidStatus.textContent = "Nuk u lidh dot."; vidBtn.disabled = false; });' +
+    '});' +
+    'function pollVideo(id){' +
+    '  fetch(RAILWAY + "/video/check?id=" + id).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.status === "COMPLETED"){' +
+    '      if(res.videoUrl){ vidStatus.textContent = "Gati!";' +
+    '        vidOut.innerHTML = \'<video src="\' + res.videoUrl + \'" controls autoplay loop style="max-width:360px;width:100%;border-radius:12px;"></video>\' + \'<br><a href="\' + res.videoUrl + \'" target="_blank" class="btn btn-green" style="display:inline-block;margin-top:12px;text-decoration:none;">Hap / Shkarko</a>\';' +
+    '      } else { vidStatus.textContent = "Perfundoi por su gjet URL."; }' +
+    '      vidBtn.disabled = false; return;' +
+    '    }' +
+    '    vidStatus.textContent = "Po gjenerohet... (" + (res.status || "po pret") + ")";' +
+    '    setTimeout(function(){ pollVideo(id); }, 6000);' +
+    '  }).catch(function(){ setTimeout(function(){ pollVideo(id); }, 6000); });' +
+    '}' +
+ 
+    '</script></body></html>';
 }
-
+ 
 module.exports = { router };
-
