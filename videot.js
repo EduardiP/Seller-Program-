@@ -39,7 +39,6 @@ router.get('/video/start', async function (req, res) {
       headers: { 'Authorization': 'Key ' + FAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: prompt,
-        elements: [{ frontal_image_url: designUrl }],
         duration: '5',
         aspect_ratio: '9:16',
         generate_audio: true
