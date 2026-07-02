@@ -25,7 +25,7 @@ router.get('/buffer/info', async function (req, res) {
   try {
     if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
     const query =
-      '{ account { organizations { id name channels { id service name } } } }';
+      '{ channels { id service name } account { organizations { id name } } }';
     const data = await bufferGraphQL(query);
     res.json({ ok: true, data: data });
   } catch (e) {
