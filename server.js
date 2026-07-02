@@ -15,6 +15,7 @@ app.get('/health', (req, res) => res.send('OK'));
 app.use('/', require('./admin').router);
 app.use('/', require('./pinterest').router);
 app.use('/', require('./videot').router);
+app.use('/', require('./buffer').router);
 
 initDb()
   .then(() => {
