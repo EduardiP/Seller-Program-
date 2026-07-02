@@ -1,53 +1,49 @@
-// videot.js — gjenerimi i videove funny me AI (Kling permes fal.ai).
-// I ndare nga skedaret e tjere. Lidhet me server.js me nje rresht.
+// videot.js — gjenerimi i videove funny me AI (Kling text-to-video permes fal.ai).
+// AI-ja shkruan vete skenen (kafshe funny), video fillon me kulmin, jo me dizajnin.
 const express = require('express');
 const router = express.Router();
-const { pool } = require('./db');
+const { generateVideoConcept } = require('./ai');
 
 const FAL_KEY = process.env.FAL_KEY;
-const MODEL = 'fal-ai/kling-video/o3/standard/image-to-video';
+const MODEL = 'fal-ai/kling-video/v3/standard/text-to-video';
 
-// Ruajme URL-t qe kthen fal per çdo kerkese (ne memorie, per test).
+// Ruajme te dhenat qe kthen fal per çdo kerkese (ne memorie, per test).
 const jobs = {};
 
-const DEFAULT_PROMPT =
-  'A funny monkey wearing a long female wig, seen in close-up facing the camera as if looking into a mirror. ' +
-  'The monkey is playfully applying makeup with exaggerated comedic expressions, putting on bright red lipstick. ' +
-  'After a moment, the monkey pulls back away from the mirror, revealing that it is wearing a short-sleeved cotton t-shirt. ' +
-  'The provided graphic is the design printed on the front of the t-shirt, centered on the chest, clearly visible at this moment. ' +
-  'The monkey then smiles warmly at the camera and points upward with one finger while saying "link in bio". ' +
-  'Start as a close-up on the monkey face, then pull back to reveal the t-shirt. ' +
-  'Smooth natural motion, humorous comedic timing, well lit, vertical video.';
-// NIS: dergon kerkesen te fal. Imazhi = nje DIZAJN nga databaza (ose ?image=URL).
+// NIS: AI-ja shkruan skenen, pastaj e dergon te fal (text-to-video).
 router.get('/video/start', async function (req, res) {
   try {
     if (!FAL_KEY) return res.status(500).json({ ok: false, error: 'Mungon FAL_KEY te Railway.' });
 
-    let image = req.query.image;
-    if (!image) {
-      // marrim nje dizajn te rastesishem nga tabela designs
-      const d = await pool.query(
-        "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY RANDOM() LIMIT 1"
-      );
-      if (d.rows.length === 0) return res.status(404).json({ ok: false, error: "S'ka dizajne te ruajtura." });
-      image = d.rows[0].image_url;
+    // AI-ja gjeneron skenen funny (ose prompt i dhene manualisht me ?prompt=)
+    let prompt = req.query.prompt;
+    let albanian = null;
+    if (!prompt) {
+      const concept = await generateVideoConcept();
+      prompt = concept.prompt;
+      albanian = concept.albanian;
     }
-    const prompt = req.query.prompt || DEFAULT_PROMPT;
 
     const r = await fetch('https://queue.fal.run/' + MODEL, {
       method: 'POST',
       headers: { 'Authorization': 'Key ' + FAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        image_url: image,
         prompt: prompt,
         duration: '5',
+        aspect_ratio: '9:16',
         generate_audio: true
       })
     });
     const data = await r.json();
     if (!r.ok) return res.status(500).json({ ok: false, error: data });
     jobs[data.request_id] = { status_url: data.status_url, response_url: data.response_url };
-    res.json({ ok: true, request_id: data.request_id, check: '/video/check?id=' + data.request_id });
+    res.json({
+      ok: true,
+      request_id: data.request_id,
+      skena: albanian,
+      prompt: prompt,
+      check: '/video/check?id=' + data.request_id
+    });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
