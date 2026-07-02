@@ -11,14 +11,13 @@ const MODEL = 'fal-ai/kling-video/o3/standard/image-to-video';
 const jobs = {};
 
 const DEFAULT_PROMPT =
-  'Create a funny, expressive monkey wearing a plain short-sleeved cotton t-shirt. ' +
-  'The provided graphic is the design printed on the front of the t-shirt, centered on the chest. ' +
-  'The monkey playfully applies a little makeup while looking into a small handheld mirror, ' +
-  'with exaggerated comedic facial expressions. Then it lowers the mirror, leans back slightly, ' +
-  'smiles warmly at the camera, and points upward with one finger while saying "link in bio". ' +
-  'The printed design stays clearly visible on the shirt. ' +
+  'A funny monkey wearing a long female wig, seen in close-up facing the camera as if looking into a mirror. ' +
+  'The monkey is playfully applying makeup with exaggerated comedic expressions, putting on bright red lipstick. ' +
+  'After a moment, the monkey pulls back away from the mirror, revealing that it is wearing a short-sleeved cotton t-shirt. ' +
+  'The provided graphic is the design printed on the front of the t-shirt, centered on the chest, clearly visible at this moment. ' +
+  'The monkey then smiles warmly at the camera and points upward with one finger while saying "link in bio". ' +
+  'Start as a close-up on the monkey face, then pull back to reveal the t-shirt. ' +
   'Smooth natural motion, humorous comedic timing, well lit, vertical video.';
-
 // NIS: dergon kerkesen te fal. Imazhi = nje DIZAJN nga databaza (ose ?image=URL).
 router.get('/video/start', async function (req, res) {
   try {
