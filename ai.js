@@ -305,8 +305,10 @@ async function generateVideoConcept() {
     '3) The animal is wearing a plain t-shirt with @Element1 printed large and clearly on the chest. Always refer to the printed graphic exactly as @Element1. ' +
     '4) At the very END, the animal proudly shows off the @Element1 print on its chest (points at it or leans toward camera), then points upward with one finger and clearly says "link in bio". ' +
     '5) Keep it genuinely funny and relatable, clean, no text overlays, no brands, no logos. ' +
-    '6) VISUAL STYLE: photorealistic, real-life cinematic footage, like a real video shot on a camera. ' +
-    'The animal must look like a REAL animal (realistic fur, real textures, natural lighting), NOT a cartoon, NOT animated, NOT 3D-rendered, NOT Pixar-style. Realistic live-action look. ' +
+    '6) VISUAL STYLE (CRITICAL): the video MUST be 100% photorealistic live-action footage, shot on a real camera, like a real nature documentary or a real phone video of a real pet. ' +
+    'The animal is a REAL living animal with real fur, real skin texture, real eyes, real natural lighting and shadows, realistic depth of field. ' +
+    'ABSOLUTELY NOT cartoon, NOT anime, NOT animated, NOT CGI, NOT 3D render, NOT Pixar, NOT Disney, NOT illustration, NOT stylized. Real footage only. ' +
+    'Begin the prompt itself with the words "Photorealistic live-action real footage of". ' +
     'For any spoken English words, use lowercase letters. ' +
     'Respond ONLY with valid JSON in this exact format: ' +
     '{"prompt": "the full vivid Kling video prompt, focused on action and motion, starting with the funniest moment and ending with the animal saying link in bio", ' +
