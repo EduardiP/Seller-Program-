@@ -15,21 +15,25 @@ router.get('/video/start', async function (req, res) {
   try {
     if (!FAL_KEY) return res.status(500).json({ ok: false, error: 'Mungon FAL_KEY te Railway.' });
  
-    // Dizajni-referencE nga databaza (ose ?image=URL)
+    // Dizajni-referencE nga databaza (ose ?image=URL) + mesazhi + kafsha
     let designUrl = req.query.image;
+    let caption = null;
+    let animal = null;
     if (!designUrl) {
       const d = await pool.query(
-        "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY RANDOM() LIMIT 1"
+        "SELECT image_url, caption, animal FROM designs WHERE image_url IS NOT NULL ORDER BY RANDOM() LIMIT 1"
       );
       if (d.rows.length === 0) return res.status(404).json({ ok: false, error: "S'ka dizajne te ruajtura." });
       designUrl = d.rows[0].image_url;
+      caption = d.rows[0].caption;
+      animal = d.rows[0].animal;
     }
- 
-    // AI-ja shkruan skenen (ose ?prompt= manual)
+
+    // AI-ja shkruan skenen bazuar te mesazhi (ose ?prompt= manual)
     let prompt = req.query.prompt;
     let albanian = null;
     if (!prompt) {
-      const concept = await generateVideoConcept();
+      const concept = await generateVideoConcept(caption, animal);
       prompt = concept.prompt;
       albanian = concept.albanian;
     }
