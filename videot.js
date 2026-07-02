@@ -6,7 +6,7 @@ const { generateVideoConcept } = require('./ai');
 const { pool } = require('./db');
  
 const FAL_KEY = process.env.FAL_KEY;
-const MODEL = 'fal-ai/kling-video/v3/standard/text-to-video';
+const MODEL = 'fal-ai/kling-video/o3/pro/reference-to-video';
  
 const jobs = {};
  
@@ -39,6 +39,7 @@ router.get('/video/start', async function (req, res) {
       headers: { 'Authorization': 'Key ' + FAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: prompt,
+        elements: [{ frontal_image_url: designUrl }],
         duration: '5',
         aspect_ratio: '9:16',
         generate_audio: true
