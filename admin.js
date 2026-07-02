@@ -238,9 +238,9 @@ function buildAdminHtml(token) {
  
     '<div class="tabs">' +
       '<button class="tab active" data-tab="dizajnet">Dizajnet</button>' +
-      '<button class="tab" data-tab="mockupet">Mockupet</button>' +
+      '<button class="tab" data-tab="mockupet">Pinterest</button>' +
       '<button class="tab" data-tab="videot">Videot</button>' +
-      '<button class="tab" data-tab="postimet">Postimet</button>' +
+      '<button class="tab" data-tab="postimet">Buffer</button>' +
     '</div>' +
  
     // ---- TAB: DIZAJNET ----
@@ -456,7 +456,17 @@ function buildAdminHtml(token) {
     '  fetch(RAILWAY + "/video/check?id=" + id).then(function(r){return r.json();}).then(function(res){' +
     '    if(res.status === "COMPLETED"){' +
     '      if(res.videoUrl){ vidStatus.textContent = "Gati!";' +
-    '        vidOut.innerHTML = \'<video src="\' + res.videoUrl + \'" controls autoplay loop style="max-width:360px;width:100%;border-radius:12px;"></video>\' + \'<br><a href="\' + res.videoUrl + \'" target="_blank" class="btn btn-green" style="display:inline-block;margin-top:12px;text-decoration:none;">Hap / Shkarko</a>\';' +
+    '        vidOut.innerHTML = \'<video src="\' + res.videoUrl + \'" controls autoplay loop style="max-width:360px;width:100%;border-radius:12px;"></video>\' + \'<br><a href="\' + res.videoUrl + \'" target="_blank" class="btn btn-green" style="display:inline-block;margin-top:12px;text-decoration:none;">Hap / Shkarko</a>\' + \' <button id="send-buffer" class="btn" style="margin-top:12px;">Dergo ne Buffer</button>\' + \'<div id="buffer-msg" style="margin-top:8px;font-size:13px;color:#444;"></div>\';' +
+    '        var sendBtn = document.getElementById("send-buffer");' +
+    '        var bmsg = document.getElementById("buffer-msg");' +
+    '        sendBtn.addEventListener("click", function(){' +
+    '          sendBtn.disabled = true; sendBtn.textContent = "Po dergohet..."; bmsg.textContent = "";' +
+    '          var u = RAILWAY + "/buffer/post?video=" + encodeURIComponent(res.videoUrl) + "&caption=" + encodeURIComponent(res.caption || "") + "&animal=" + encodeURIComponent(res.animal || "");' +
+    '          fetch(u).then(function(r){return r.json();}).then(function(b){' +
+    '            if(b.ok){ sendBtn.textContent = "Derguar ne Buffer ✓"; bmsg.textContent = "U shtua ne rradhe te 3 kanalet."; }' +
+    '            else { sendBtn.disabled = false; sendBtn.textContent = "Provo prap"; bmsg.textContent = "Gabim: " + (b.error || ""); }' +
+    '          }).catch(function(){ sendBtn.disabled = false; sendBtn.textContent = "Provo prap"; bmsg.textContent = "Nuk u lidh dot."; });' +
+    '        });' +
     '      } else { vidStatus.textContent = "Perfundoi por su gjet URL."; }' +
     '      vidBtn.disabled = false; return;' +
     '    }' +
