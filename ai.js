@@ -287,7 +287,6 @@ async function generateVideoConcept() {
     'french bulldog', 'sloth', 'panda', 'chicken', 'duck'
   ];
   const scenarios = [
-  const scenarios = [
     'dancing confidently', 'giving a dramatic motivational speech', 'refusing to get out of bed',
     'reacting to Monday', 'showing off an outfit', 'gossiping on the phone',
     'doing a little happy dance', 'pretending to be a fitness coach', 'being over-caffeinated',
