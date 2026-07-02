@@ -42,7 +42,8 @@ router.get('/video/start', async function (req, res) {
         elements: [{ frontal_image_url: designUrl, reference_image_urls: [designUrl] }],
         duration: '5',
         aspect_ratio: '9:16',
-        generate_audio: true
+        generate_audio: true,
+        negative_prompt: 'cartoon, anime, animation, animated, CGI, 3D render, Pixar, Disney, illustration, stylized, drawing, painting, low quality, blurry, distorted'
       })
     });
     const data = await r.json();
