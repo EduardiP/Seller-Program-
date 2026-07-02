@@ -280,9 +280,13 @@ async function generateTextConcept() {
 // AI: gjeneron nje skenE video funny (kafshe qe sillet si njeri) per Kling.
 async function generateVideoConcept() {
   const animals = [
-    'cat', 'dog', 'monkey', 'golden retriever', 'pug', 'raccoon', 'goat',
-    'hamster', 'parrot', 'french bulldog', 'sloth', 'panda', 'chicken', 'duck'
+    'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua',
+    'monkey', 'monkey', 'monkey', 'monkey',
+    'cat', 'cat', 'cat',
+    'golden retriever', 'pug', 'raccoon', 'goat', 'hamster', 'parrot',
+    'french bulldog', 'sloth', 'panda', 'chicken', 'duck'
   ];
+  const scenarios = [
   const scenarios = [
     'dancing confidently', 'giving a dramatic motivational speech', 'refusing to get out of bed',
     'reacting to Monday', 'showing off an outfit', 'gossiping on the phone',
