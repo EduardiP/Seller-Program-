@@ -299,8 +299,8 @@ async function generateVideoConcept() {
     '1) The star is ONLY ONE animal, behaving like a human (talking, dancing, gesturing, funny human-like attitude). ' +
     'NO humans appear at all, ever. Only the animal. ' +
     '2) The video MUST START with the funniest, most attention-grabbing moment right in the first second (the peak of the joke first). ' +
-    '3) The animal is wearing a plain t-shirt with @Element1 printed large and clearly on the chest. Always refer to the printed graphic exactly as @Element1. ' +
-    '4) At the very END, the animal proudly shows off the @Element1 print on its chest (points at it or leans toward camera), then points upward with one finger and clearly says "link in bio". ' +
+    '3) The animal is wearing a t-shirt with a bold, funny printed graphic clearly visible on the chest. ' +
+    '4) At the very END, the animal proudly shows off the print on its chest (points at it or leans toward camera), then points upward with one finger and clearly says "link in bio". ' +
     '5) Keep it genuinely funny and relatable, clean, no text overlays, no brands, no logos. ' +
     'For any spoken English words, use lowercase letters. ' +
     'Respond ONLY with valid JSON in this exact format: ' +
