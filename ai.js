@@ -278,41 +278,38 @@ async function generateTextConcept() {
 }
 
 // AI: gjeneron nje skenE video funny (kafshe qe sillet si njeri) per Kling.
-async function generateVideoConcept() {
-  const animals = [
-    'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua', 'chihuahua',
-    'monkey', 'monkey', 'monkey', 'monkey',
-    'cat', 'cat', 'cat',
-    'golden retriever', 'pug', 'raccoon', 'goat', 'hamster', 'parrot',
-    'french bulldog', 'sloth', 'panda', 'chicken', 'duck'
-  ];
-  const scenarios = [
-    'dancing confidently', 'giving a dramatic motivational speech', 'refusing to get out of bed',
-    'reacting to Monday', 'showing off an outfit', 'gossiping on the phone',
-    'doing a little happy dance', 'pretending to be a fitness coach', 'being over-caffeinated',
-    'acting like a diva', 'celebrating a tiny victory', 'giving sassy attitude'
-  ];
-  const animal = animals[Math.floor(Math.random() * animals.length)];
-  const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+// AI: gjeneron skenen e videos bazuar te MESAZHI i dizajnit real (kafsha jeton memen).
+async function generateVideoConcept(caption, animal) {
+  caption = caption || 'funny relatable moment';
+  var hasAnimal = animal && animal !== 'text-only';
 
   const systemPrompt =
     'You are a creative director for a viral funny-animal short video brand that sells t-shirts. ' +
     'You write prompts for an AI video model (Kling), 5 seconds long, vertical 9:16. ' +
+    'You are given the funny message printed on a t-shirt, and you must create a scene where an animal ACTS OUT and EMBODIES that exact message with its behavior and facial expression. ' +
+    'The comedy must come FROM the t-shirt message itself, not from a random unrelated action. ' +
     'STRICT RULES: ' +
-    '1) The star is ONLY ONE animal, behaving like a human (talking, dancing, gesturing, funny human-like attitude). ' +
-    'NO humans appear at all, ever. Only the animal. ' +
-    '2) The video MUST START with the funniest, most attention-grabbing moment right in the first second (the peak of the joke first). ' +
+    '1) ONE animal only, behaving like a human, PERFORMING the emotion/situation of the t-shirt message (its expression and actions must match the joke). ' +
+    'NO other humans or animals appear. ' +
+    '2) The video MUST START with the funniest, most attention-grabbing moment in the first second. ' +
     '3) The animal is wearing a plain t-shirt with @Element1 printed large and clearly on the chest. Always refer to the printed graphic exactly as @Element1. ' +
-    '4) At the very END, the animal proudly shows off the @Element1 print on its chest (points at it or leans toward camera), then points upward with one finger and clearly says "link in bio". ' +
-    '5) Keep it genuinely funny and relatable, clean, no text overlays, no brands, no logos. ' +
-    '6) VISUAL STYLE (CRITICAL): the video MUST be 100% photorealistic live-action footage, shot on a real camera, like a real nature documentary or a real phone video of a real pet. ' +
-    'The animal is a REAL living animal with real fur, real skin texture, real eyes, real natural lighting and shadows, realistic depth of field. ' +
-    'ABSOLUTELY NOT cartoon, NOT anime, NOT animated, NOT CGI, NOT 3D render, NOT Pixar, NOT Disney, NOT illustration, NOT stylized. Real footage only. ' +
+    '4) The animal must behave in a CONTROLLED, natural way (no chaotic, no glitchy, no uncontrolled movements) — smooth realistic motion only. ' +
+    '5) At the very END, the animal proudly shows off the @Element1 print on its chest, then points upward with one finger and clearly says the exact English phrase "link in bio" (keep these three English words untranslated). ' +
+    '6) VISUAL STYLE (CRITICAL): 100% photorealistic live-action real footage, shot on a real camera, like a real pet video. ' +
+    'The animal is a REAL living animal with real fur, real textures, real eyes, natural lighting. ' +
+    'ABSOLUTELY NOT cartoon, NOT anime, NOT animated, NOT CGI, NOT 3D render, NOT Pixar, NOT illustration, NOT stylized. Real footage only. ' +
     'Begin the prompt itself with the words "Photorealistic live-action real footage of". ' +
     'For any spoken English words, use lowercase letters. ' +
     'Respond ONLY with valid JSON in this exact format: ' +
-    '{"prompt": "the full vivid Kling video prompt, focused on action and motion, starting with the funniest moment and ending with the animal saying link in bio", ' +
+    '{"prompt": "the full vivid Kling video prompt, where the animal acts out the t-shirt message, starting with the funniest moment and ending with the animal saying link in bio", ' +
     '"albanian": "a short natural Albanian description of the scene for the owner"}';
+
+  var userMsg;
+  if (hasAnimal) {
+    userMsg = 'The t-shirt message is: "' + caption + '". Use a ' + animal + ' that acts out and embodies this exact message with its expression and behavior. Start with the funniest moment, and end with the animal saying "link in bio".';
+  } else {
+    userMsg = 'The t-shirt message is: "' + caption + '". Choose the funniest animal that fits this message, and have it act out and embody this exact message with its expression and behavior. Start with the funniest moment, and end with the animal saying "link in bio".';
+  }
 
   const res = await fetch(OPENAI_CHAT_URL, {
     method: 'POST',
@@ -324,9 +321,9 @@ async function generateVideoConcept() {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Write one funny 5-second video prompt now. Use a ' + animal + ' ' + scenario + '. Start with the funniest moment in the first second, and end with the animal pointing up and saying "link in bio".' }
+        { role: 'user', content: userMsg }
       ],
-      temperature: 1.1
+      temperature: 1.0
     })
   });
 
@@ -353,5 +350,4 @@ async function generateVideoConcept() {
   }
   return concept;
 }
-
 module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept };
