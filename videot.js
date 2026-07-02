@@ -1,21 +1,31 @@
-// videot.js — gjenerimi i videove funny me AI (Kling text-to-video permes fal.ai).
-// AI-ja shkruan vete skenen (kafshe funny), video fillon me kulmin, jo me dizajnin.
+// videot.js — video funny me AI (Kling text-to-video + element reference permes fal.ai).
+// AI shkruan skenen (kafshe funny qe vesh bluzE me dizajnin tend si @Element1).
 const express = require('express');
 const router = express.Router();
 const { generateVideoConcept } = require('./ai');
+const { pool } = require('./db');
 
 const FAL_KEY = process.env.FAL_KEY;
 const MODEL = 'fal-ai/kling-video/v3/standard/text-to-video';
 
-// Ruajme te dhenat qe kthen fal per çdo kerkese (ne memorie, per test).
 const jobs = {};
 
-// NIS: AI-ja shkruan skenen, pastaj e dergon te fal (text-to-video).
+// NIS: merr dizajnin (referencE), AI shkruan skenen, dergon te fal.
 router.get('/video/start', async function (req, res) {
   try {
     if (!FAL_KEY) return res.status(500).json({ ok: false, error: 'Mungon FAL_KEY te Railway.' });
 
-    // AI-ja gjeneron skenen funny (ose prompt i dhene manualisht me ?prompt=)
+    // Dizajni-referencE nga databaza (ose ?image=URL)
+    let designUrl = req.query.image;
+    if (!designUrl) {
+      const d = await pool.query(
+        "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY RANDOM() LIMIT 1"
+      );
+      if (d.rows.length === 0) return res.status(404).json({ ok: false, error: "S'ka dizajne te ruajtura." });
+      designUrl = d.rows[0].image_url;
+    }
+
+    // AI-ja shkruan skenen (ose ?prompt= manual)
     let prompt = req.query.prompt;
     let albanian = null;
     if (!prompt) {
@@ -29,6 +39,7 @@ router.get('/video/start', async function (req, res) {
       headers: { 'Authorization': 'Key ' + FAL_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: prompt,
+        elements: [{ frontal_image_url: designUrl }],
         duration: '5',
         aspect_ratio: '9:16',
         generate_audio: true
@@ -41,6 +52,7 @@ router.get('/video/start', async function (req, res) {
       ok: true,
       request_id: data.request_id,
       skena: albanian,
+      dizajni: designUrl,
       prompt: prompt,
       check: '/video/check?id=' + data.request_id
     });
@@ -49,7 +61,7 @@ router.get('/video/start', async function (req, res) {
   }
 });
 
-// KONTROLLO: a mbaroi videoja? Kur mbaron, kthen URL-ne e videos.
+// KONTROLLO: a mbaroi videoja?
 router.get('/video/check', async function (req, res) {
   try {
     const id = req.query.id;
