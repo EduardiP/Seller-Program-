@@ -277,4 +277,74 @@ async function generateTextConcept() {
   return concept;
 }
 
-module.exports = { router, generateImage, generateConcept, generateTextConcept };
+// AI: gjeneron nje skenE video funny (kafshe qe sillet si njeri) per Kling.
+async function generateVideoConcept() {
+  const animals = [
+    'cat', 'dog', 'monkey', 'golden retriever', 'pug', 'raccoon', 'goat',
+    'hamster', 'parrot', 'french bulldog', 'sloth', 'panda', 'chicken', 'duck'
+  ];
+  const scenarios = [
+    'dancing confidently', 'giving a dramatic motivational speech', 'refusing to get out of bed',
+    'reacting to Monday', 'showing off an outfit', 'gossiping on the phone',
+    'doing a little happy dance', 'pretending to be a fitness coach', 'being over-caffeinated',
+    'acting like a diva', 'celebrating a tiny victory', 'giving sassy attitude'
+  ];
+  const animal = animals[Math.floor(Math.random() * animals.length)];
+  const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+  const systemPrompt =
+    'You are a creative director for a viral funny-animal short video brand that sells t-shirts. ' +
+    'You write prompts for an AI video model (Kling), 5 seconds long, vertical 9:16. ' +
+    'STRICT RULES: ' +
+    '1) The star is ONLY ONE animal, behaving like a human (talking, dancing, gesturing, funny human-like attitude). ' +
+    'NO humans appear at all, ever. Only the animal. ' +
+    '2) The video MUST START with the funniest, most attention-grabbing moment right in the first second (the peak of the joke first). ' +
+    '3) The animal is wearing a plain t-shirt. ' +
+    '4) At the very END, the animal looks at the camera, points upward with one finger, and clearly says "link in bio". ' +
+    '5) Keep it genuinely funny and relatable, clean, no text overlays, no brands, no logos. ' +
+    'For any spoken English words, use lowercase letters. ' +
+    'Respond ONLY with valid JSON in this exact format: ' +
+    '{"prompt": "the full vivid Kling video prompt, focused on action and motion, starting with the funniest moment and ending with the animal saying link in bio", ' +
+    '"albanian": "a short natural Albanian description of the scene for the owner"}';
+
+  const res = await fetch(OPENAI_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + OPENAI_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Write one funny 5-second video prompt now. Use a ' + animal + ' ' + scenario + '. Start with the funniest moment in the first second, and end with the animal pointing up and saying "link in bio".' }
+      ],
+      temperature: 1.1
+    })
+  });
+
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+
+  if (!res.ok) {
+    const err = new Error('OpenAI chat error ' + res.status);
+    err.status = res.status;
+    err.body = data;
+    throw err;
+  }
+
+  const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new Error('Nuk u kthye koncept videoje nga AI.');
+
+  let concept;
+  try {
+    const clean = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    concept = JSON.parse(clean);
+  } catch (e) {
+    throw new Error('Koncepti i videos s\'u parsua dot: ' + content);
+  }
+  return concept;
+}
+
+module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept };
