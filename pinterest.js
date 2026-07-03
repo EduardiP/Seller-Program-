@@ -101,7 +101,7 @@ async function createMockupUrl(designUrl) {
   await initPinterest();
   if (!designUrl) {
     const d = await pool.query(
-      "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+      "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY RANDOM() LIMIT 1"
     );
     if (d.rows.length === 0) throw new Error("S'ka dizajne te ruajtura.");
     designUrl = d.rows[0].image_url;
