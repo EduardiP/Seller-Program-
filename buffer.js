@@ -62,8 +62,8 @@ router.get('/buffer/post', async function (req, res) {
     // Secili kanal me konfigurimin e vet.
     const targets = [
       { channelId: CHANNELS.tiktok, meta: '' },
-      { channelId: CHANNELS.instagram, meta: ', metadata: { instagram: { type: reel } }' },
-      { channelId: CHANNELS.youtube, meta: ', metadata: { youtube: { title: $title, category: entertainment, visibility: publicVideo } }' }
+      { channelId: CHANNELS.instagram, meta: ', metadata: { instagram: { type: reel, shouldShareToFeed: true } }' },
+      { channelId: CHANNELS.youtube, meta: ', metadata: { youtube: { title: $title } }' }
     ];
     const results = [];
  
