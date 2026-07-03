@@ -16,6 +16,7 @@ app.use('/', require('./admin').router);
 app.use('/', require('./pinterest').router);
 app.use('/', require('./videot').router);
 app.use('/', require('./buffer').router);
+app.use('/', require('./automatizimi').router);
 
 initDb()
   .then(() => {
