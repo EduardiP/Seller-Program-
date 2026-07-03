@@ -5,6 +5,23 @@
 const express = require('express');
 const { generateConcept, generateImage, generateTextConcept } = require('./ai');
 const { pool } = require('./db');
+ 
+// Tabela e publikimeve (dizajni, orari, kolona, statusi) — krijohet nje here.
+async function initPublications() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS publications (
+      id SERIAL PRIMARY KEY,
+      design_id INTEGER,
+      image_url TEXT,
+      pinterest_when TIMESTAMP,
+      buffer_when TIMESTAMP,
+      channels TEXT,
+      status TEXT DEFAULT 'scheduled',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+}
+initPublications().catch(function (e) { console.error('initPublications:', e.message); });
 const { printifyFetch, getShopId } = require('./products');
 const cloudinary = require('cloudinary').v2;
  
@@ -220,6 +237,38 @@ router.get('/admin/reject', requireAdmin, async function (req, res) {
   }
 });
  
+// RUAN nje publikim (dizajni, oraret, kanalet e zgjedhura).
+router.get('/admin/publish-save', requireAdmin, async function (req, res) {
+  try {
+    const designId = parseInt(req.query.designId, 10) || null;
+    const imageUrl = req.query.image || null;
+    const pinterestWhen = req.query.pinterestWhen || null;
+    const bufferWhen = req.query.bufferWhen || null;
+    const channels = req.query.channels || '';
+    const saved = await pool.query(
+      `INSERT INTO publications (design_id, image_url, pinterest_when, buffer_when, channels, status)
+       VALUES ($1,$2,$3,$4,$5,'scheduled') RETURNING id`,
+      [designId, imageUrl, pinterestWhen, bufferWhen, channels]
+    );
+    res.json({ ok: true, id: saved.rows[0].id });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+ 
+// KTHEN publikimet (per seksionin te home i Urdherat).
+router.get('/admin/publications', requireAdmin, async function (req, res) {
+  try {
+    const r = await pool.query(
+      `SELECT id, design_id, image_url, pinterest_when, buffer_when, channels, status, created_at
+         FROM publications ORDER BY created_at DESC LIMIT 50`
+    );
+    res.json({ ok: true, publications: r.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+ 
 router.get('/', function (req, res) {
   const token = req.query.token || '';
   res.set('Content-Type', 'text/html; charset=utf-8');
@@ -345,11 +394,36 @@ function buildAdminHtml(token) {
  
     // ---- MODAL PUBLIKIMI (brenda urdherat) ----
     '<div id="pub-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">' +
-      '<div style="background:#fff;border-radius:12px;padding:24px;max-width:560px;width:92%;position:relative;">' +
+      '<div style="background:#fff;border-radius:12px;padding:24px;max-width:700px;width:94%;position:relative;max-height:90vh;overflow-y:auto;">' +
         '<button id="pub-x" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>' +
         '<h3 style="margin:0 0 16px;">Publiko dizajnin</h3>' +
-        '<div id="pub-body" style="font-size:14px;color:#444;margin-bottom:16px;min-height:120px;">Permbajtja e publikimit do vije se shpejti.</div>' +
-        '<button id="pub-send" class="btn btn-green" style="width:100%;">Dergo</button>' +
+        // oraret sipër me shenjen =
+        '<div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;">' +
+          '<div style="flex:1;">' +
+            '<label style="font-size:12px;color:#444;">Orari Pinterest:</label><br>' +
+            '<input id="pub-pin-when" type="datetime-local" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;">' +
+          '</div>' +
+          '<button id="pub-eq" title="Njesoj" style="height:34px;padding:0 12px;background:#eee;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:16px;">=</button>' +
+          '<div style="flex:1;">' +
+            '<label style="font-size:12px;color:#444;">Orari Buffer (TikTok+IG):</label><br>' +
+            '<input id="pub-buf-when" type="datetime-local" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;">' +
+          '</div>' +
+        '</div>' +
+        // dy kolonat
+        '<div style="display:flex;gap:12px;">' +
+          '<div style="flex:1;border:1px solid #e3e3e3;border-radius:10px;padding:12px;">' +
+            '<h4 style="margin:0 0 10px;font-size:14px;color:#e60023;">Pinterest</h4>' +
+            '<button id="pub-mock-btn" class="btn" style="width:100%;background:#e60023;">Krijo mockup</button>' +
+            '<div id="pub-mock-out" style="margin-top:10px;"></div>' +
+          '</div>' +
+          '<div style="flex:1;border:1px solid #e3e3e3;border-radius:10px;padding:12px;">' +
+            '<h4 style="margin:0 0 10px;font-size:14px;color:#3a3a8a;">Buffer (TikTok+IG)</h4>' +
+            '<button id="pub-vid-btn" class="btn" style="width:100%;background:#3a3a8a;">Krijo video</button>' +
+            '<div id="pub-vid-status" style="margin-top:8px;font-size:12px;color:#666;"></div>' +
+            '<div id="pub-vid-out" style="margin-top:10px;"></div>' +
+          '</div>' +
+        '</div>' +
+        '<button id="pub-send" class="btn btn-green" style="width:100%;margin-top:16px;" disabled>Dergo</button>' +
         '<div id="pub-msg" style="margin-top:10px;font-size:13px;color:#444;"></div>' +
       '</div>' +
     '</div>' +
@@ -518,14 +592,96 @@ function buildAdminHtml(token) {
     '  }).catch(function(){});' +
     '});' +
     'document.getElementById("ord-back").addEventListener("click", function(){ ordFull.style.display = "none"; document.getElementById("ord-home").style.display = "block"; });' +
+    'var pubState = { design: null, mockupUrl: null, videoUrl: null, videoCaption: null, videoAnimal: null };' +
     'function openPubModal(d){' +
+    '  pubState = { design: d, mockupUrl: null, videoUrl: null, videoCaption: null, videoAnimal: null };' +
     '  document.getElementById("pub-msg").textContent = "";' +
+    '  document.getElementById("pub-pin-when").value = "";' +
+    '  document.getElementById("pub-buf-when").value = "";' +
+    '  document.getElementById("pub-mock-out").innerHTML = "";' +
+    '  document.getElementById("pub-vid-out").innerHTML = "";' +
+    '  document.getElementById("pub-vid-status").textContent = "";' +
+    '  updatePubSend();' +
     '  var ov = document.getElementById("pub-overlay"); ov.style.display = "flex";' +
     '  document.getElementById("pub-x").onclick = function(){ ov.style.display = "none"; };' +
-    '  document.getElementById("pub-send").onclick = function(){' +
-    '    document.getElementById("pub-msg").textContent = "Publikimi do lidhet se shpejti.";' +
-    '  };' +
     '}' +
+    // shenja =
+    'document.getElementById("pub-eq").addEventListener("click", function(){' +
+    '  var p = document.getElementById("pub-pin-when").value;' +
+    '  var b = document.getElementById("pub-buf-when").value;' +
+    '  var v = p || b;' +
+    '  if(v){ document.getElementById("pub-pin-when").value = v; document.getElementById("pub-buf-when").value = v; }' +
+    '});' +
+    // krijo mockup (perdor dizajnin e klikuar)
+    'document.getElementById("pub-mock-btn").addEventListener("click", function(){' +
+    '  var out = document.getElementById("pub-mock-out"); out.innerHTML = "Po krijohet...";' +
+    '  var u = RAILWAY + "/pinterest/mockup-url?image=" + encodeURIComponent(pubState.design.image_url);' +
+    '  fetch(u).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok && res.url){ pubState.mockupUrl = res.url; out.innerHTML = \'<img src="\' + res.url + \'" style="width:100%;border-radius:8px;">\'; updatePubSend(); }' +
+    '    else { out.innerHTML = "Gabim: " + (res.error || ""); }' +
+    '  }).catch(function(){ out.innerHTML = "Nuk u lidh dot."; });' +
+    '});' +
+    // krijo video (perdor dizajnin e klikuar)
+    'document.getElementById("pub-vid-btn").addEventListener("click", function(){' +
+    '  var st = document.getElementById("pub-vid-status"); var out = document.getElementById("pub-vid-out");' +
+    '  st.textContent = "Po nis videon..."; out.innerHTML = "";' +
+    '  fetch(RAILWAY + "/video/start?image=" + encodeURIComponent(pubState.design.image_url)).then(function(r){return r.json();}).then(function(res){' +
+    '    if(!res.ok){ st.textContent = "Gabim: " + (res.error && res.error.message || JSON.stringify(res.error)); return; }' +
+    '    st.textContent = "Po gjenerohet... (1-3 min)";' +
+    '    pubPollVideo(res.request_id, st, out);' +
+    '  }).catch(function(){ st.textContent = "Nuk u lidh dot."; });' +
+    '});' +
+    'function pubPollVideo(id, st, out){' +
+    '  fetch(RAILWAY + "/video/check?id=" + id).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.status === "COMPLETED"){' +
+    '      if(res.videoUrl){ st.textContent = "Gati!"; pubState.videoUrl = res.videoUrl; pubState.videoCaption = res.caption; pubState.videoAnimal = res.animal;' +
+    '        out.innerHTML = \'<video src="\' + res.videoUrl + \'" controls loop style="width:100%;border-radius:8px;"></video>\'; updatePubSend(); }' +
+    '      else { st.textContent = "Perfundoi por su gjet URL."; } return;' +
+    '    }' +
+    '    st.textContent = "Po gjenerohet... (" + (res.status || "po pret") + ")";' +
+    '    setTimeout(function(){ pubPollVideo(id, st, out); }, 6000);' +
+    '  }).catch(function(){ setTimeout(function(){ pubPollVideo(id, st, out); }, 6000); });' +
+    '}' +
+    // a eshte zgjedhur nje kolone: orar + rezultat
+    'function pinReady(){ return document.getElementById("pub-pin-when").value && pubState.mockupUrl; }' +
+    'function bufReady(){ return document.getElementById("pub-buf-when").value && pubState.videoUrl; }' +
+    'function updatePubSend(){ document.getElementById("pub-send").disabled = !(pinReady() || bufReady()); }' +
+    'document.getElementById("pub-pin-when").addEventListener("change", updatePubSend);' +
+    'document.getElementById("pub-buf-when").addEventListener("change", updatePubSend);' +
+    // dergo: poston kolonat e plotesuara dhe ruan ne databaze
+    'document.getElementById("pub-send").addEventListener("click", function(){' +
+    '  var btn = document.getElementById("pub-send"); var msg = document.getElementById("pub-msg");' +
+    '  btn.disabled = true; btn.textContent = "Po dergohet..."; msg.textContent = "";' +
+    '  var chans = []; var tasks = [];' +
+    '  var pinWhen = document.getElementById("pub-pin-when").value;' +
+    '  var bufWhen = document.getElementById("pub-buf-when").value;' +
+    '  if(pinReady()){ chans.push("pinterest");' +
+    '    tasks.push(fetch(RAILWAY + "/buffer/pinterest?design=" + encodeURIComponent(pubState.mockupUrl) + "&caption=" + encodeURIComponent(pubState.design.caption || "") + "&animal=" + encodeURIComponent(pubState.design.animal || "") + "&when=" + encodeURIComponent(pinWhen)).then(function(r){return r.json();})); }' +
+    '  if(bufReady()){ chans.push("buffer");' +
+    '    tasks.push(fetch(RAILWAY + "/buffer/post?video=" + encodeURIComponent(pubState.videoUrl) + "&caption=" + encodeURIComponent(pubState.videoCaption || "") + "&animal=" + encodeURIComponent(pubState.videoAnimal || "") + "&when=" + encodeURIComponent(bufWhen)).then(function(r){return r.json();})); }' +
+    '  Promise.all(tasks).then(function(){' +
+    '    var save = RAILWAY + "/admin/publish-save?designId=" + (pubState.design.id || "") + "&image=" + encodeURIComponent(pubState.design.image_url) + "&pinterestWhen=" + encodeURIComponent(pinWhen || "") + "&bufferWhen=" + encodeURIComponent(bufWhen || "") + "&channels=" + encodeURIComponent(chans.join(","));' +
+    '    return fetch(save).then(function(r){return r.json();});' +
+    '  }).then(function(){' +
+    '    btn.textContent = "Derguar ✓"; msg.textContent = "U planifikua: " + chans.join(" + "); loadSchedule();' +
+    '  }).catch(function(){ btn.disabled = false; btn.textContent = "Dergo"; msg.textContent = "Gabim gjate dergimit."; });' +
+    '});' +
+    // seksioni i orareve/publikimeve te home
+    'function loadSchedule(){' +
+    '  var box = document.getElementById("ord-schedule");' +
+    '  fetch("/admin/publications?token=" + encodeURIComponent(TOKEN)).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok && res.publications && res.publications.length){' +
+    '      box.innerHTML = "";' +
+    '      res.publications.forEach(function(p){' +
+    '        var row = document.createElement("div");' +
+    '        row.style.cssText = "display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f0f0f0;";' +
+    '        row.innerHTML = \'<img src="\' + (p.image_url||"") + \'" style="width:36px;height:36px;border-radius:6px;object-fit:cover;background:#eee;">\' + \'<span style="font-size:12px;color:#444;">\' + (p.channels||"") + \'</span>\' + \'<span style="font-size:11px;color:#888;margin-left:auto;">\' + (p.pinterest_when||p.buffer_when||"") + \'</span>\';' +
+    '        box.appendChild(row);' +
+    '      });' +
+    '    } else { box.innerHTML = \'<span style="color:#888;">Ende asnje publikim.</span>\'; }' +
+    '  }).catch(function(){});' +
+    '}' +
+    'loadSchedule();' +
     'loadOrders();' +
  
     // ---- MOCKUPET ----
