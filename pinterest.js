@@ -89,4 +89,31 @@ router.get('/pinterest/test-mockup', async function (req, res) {
   }
 });
 
-module.exports = { router, initPinterest, generateMockup };
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Krijon nje mockup nga dizajni i fundit dhe e ngarkon te Cloudinary, kthen URL-n.
+async function createMockupUrl(designUrl) {
+  await initPinterest();
+  if (!designUrl) {
+    const d = await pool.query(
+      "SELECT image_url FROM designs WHERE image_url IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+    );
+    if (d.rows.length === 0) throw new Error("S'ka dizajne te ruajtura.");
+    designUrl = d.rows[0].image_url;
+  }
+  const mockupBuffer = await generateMockup(designUrl);
+  const b64 = mockupBuffer.toString('base64');
+  const dataUri = 'data:image/jpeg;base64,' + b64;
+  const result = await cloudinary.uploader.upload(dataUri, {
+    folder: 'seller-mockups',
+    resource_type: 'image'
+  });
+  return result.secure_url;
+}
+
+module.exports = { router, initPinterest, generateMockup, createMockupUrl };
