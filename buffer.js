@@ -79,7 +79,7 @@ async function postToPinterest(caption, animal, designUrlOverride) {
     '    text: $text,' +
     '    channelId: $channelId,' +
     '    schedulingType: automatic,' +
-    '    mode: now,' +
+    '    mode: shareNow,' +
     '    assets: [{ image: { url: $url } }],' +
     '    metadata: { pinterest: { title: $title, url: $link, boardServiceId: $board } }' +
     '  }) {' +
@@ -123,7 +123,7 @@ router.get('/buffer/post', async function (req, res) {
         '    text: $text,' +
         '    channelId: $channelId,' +
         '    schedulingType: automatic,' +
-        '    mode: now,' +
+        '    mode: shareNow,' +
         '    assets: [{ video: { url: $url } }]' +
         t.meta +
         '  }) {' +
