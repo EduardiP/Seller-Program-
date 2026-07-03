@@ -51,33 +51,49 @@ router.get('/buffer/post', async function (req, res) {
  
     // Titulli/pershkrimi me AI (SEO)
     let text = req.query.text;
+    let title = req.query.title;
     if (!text) {
       const cap = await generateVideoCaption(req.query.caption || '', req.query.animal || '');
       text = (cap.caption || '') + '\n\n' + (cap.hashtags || '');
+      if (!title) title = cap.title || 'Funny video';
     }
+    if (!title) title = 'Funny video';
  
-    const channelIds = [CHANNELS.tiktok, CHANNELS.instagram, CHANNELS.youtube];
+    // Secili kanal me konfigurimin e vet.
+    const targets = [
+      { channelId: CHANNELS.tiktok, meta: '' },
+      { channelId: CHANNELS.instagram, meta: ', metadata: { instagram: { type: reel } }' },
+      { channelId: CHANNELS.youtube, meta: ', metadata: { youtube: { title: $title, category: entertainment, visibility: publicVideo } }' }
+    ];
     const results = [];
  
-    for (var i = 0; i < channelIds.length; i++) {
+    for (var i = 0; i < targets.length; i++) {
+      const t = targets[i];
+      const usesTitle = t.meta.indexOf('$title') !== -1;
+      const varDefs = usesTitle
+        ? '($text: String!, $channelId: ChannelId!, $url: String!, $title: String!)'
+        : '($text: String!, $channelId: ChannelId!, $url: String!)';
       const mutation =
-        'mutation ($text: String!, $channelId: ChannelId!, $url: String!) {' +
+        'mutation ' + varDefs + ' {' +
         '  createPost(input: {' +
         '    text: $text,' +
         '    channelId: $channelId,' +
         '    schedulingType: automatic,' +
         '    mode: addToQueue,' +
         '    assets: [{ video: { url: $url } }]' +
+        t.meta +
         '  }) {' +
         '    ... on PostActionSuccess { post { id dueAt } }' +
         '    ... on MutationError { message }' +
         '  }' +
         '}';
-      const data = await bufferGraphQL(mutation, { text: text, channelId: channelIds[i], url: videoUrl });
-      results.push({ channelId: channelIds[i], response: data });
+      const vars = { text: text, channelId: t.channelId, url: videoUrl };
+      if (usesTitle) vars.title = title;
+      const data = await bufferGraphQL(mutation, vars);
+      results.push({ channelId: t.channelId, response: data });
     }
  
-    res.json({ ok: true, text: text, results: results });
+    res.json({ ok: true, text: text, title: title, results: results });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
