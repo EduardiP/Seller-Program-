@@ -21,7 +21,7 @@ const CHANNELS = {
 const SHOP_URL = 'https://impressarel.myshopify.com';
  
 // Board-i i Pinterest ku shkojne pinet.
-const PINTEREST_BOARD = '1100919140100496663';
+const PINTEREST_BOARD = '893612819751675733';
  
 // Ndihmes: dergon nje query/mutation GraphQL te Buffer.
 async function bufferGraphQL(query, variables) {
