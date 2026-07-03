@@ -19,6 +19,9 @@ const CHANNELS = {
 // Linku i dyqanit (destinacioni per pinet e Pinterest).
 const SHOP_URL = 'https://impressarel.myshopify.com';
  
+// Board-i i Pinterest ku shkojne pinet.
+const PINTEREST_BOARD = '1100919140100496663';
+ 
 // Ndihmes: dergon nje query/mutation GraphQL te Buffer.
 async function bufferGraphQL(query, variables) {
   const res = await fetch(BUFFER_API, {
@@ -104,21 +107,21 @@ router.get('/buffer/post', async function (req, res) {
     // 2) DIZAJNI (imazh) -> Pinterest (me link destinacioni)
     if (pinterestUrl) {
       const mutation =
-        'mutation ($text: String!, $channelId: ChannelId!, $url: String!, $title: String!, $link: String!) {' +
+        'mutation ($text: String!, $channelId: ChannelId!, $url: String!, $title: String!, $link: String!, $board: String!) {' +
         '  createPost(input: {' +
         '    text: $text,' +
         '    channelId: $channelId,' +
         '    schedulingType: automatic,' +
         '    mode: addToQueue,' +
         '    assets: [{ image: { url: $url } }],' +
-        '    metadata: { pinterest: { title: $title, destinationUrl: $link } }' +
+        '    metadata: { pinterest: { title: $title, url: $link, boardServiceId: $board } }' +
         '  }) {' +
         '    ... on PostActionSuccess { post { id dueAt } }' +
         '    ... on MutationError { message }' +
         '  }' +
         '}';
       const data = await bufferGraphQL(mutation, {
-        text: text, channelId: CHANNELS.pinterest, url: pinterestUrl, title: title, link: SHOP_URL
+        text: text, channelId: CHANNELS.pinterest, url: pinterestUrl, title: title, link: SHOP_URL, board: PINTEREST_BOARD
       });
       results.push({ target: 'pinterest', channelId: CHANNELS.pinterest, response: data });
     }
