@@ -407,4 +407,58 @@ async function generateVideoCaption(caption, animal) {
   return out;
 }
 
-module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept, generateVideoCaption };
+// AI: gjeneron titull + pershkrim SEO per nje pin te Pinterest (mockup veshjeje).
+async function generatePinterestSeo(caption, animal) {
+  caption = caption || 'funny relatable design';
+  var hasAnimal = animal && animal !== 'text-only';
+  var subject = hasAnimal ? ('a funny ' + animal) : 'a funny slogan';
+
+  const systemPrompt =
+    'You are a Pinterest SEO expert for a funny apparel brand (t-shirts). ' +
+    'Pinterest is a visual SEARCH engine: people search with keywords, and pins with keyword-rich, descriptive titles and descriptions rank and get discovered for months. ' +
+    'Write a Pin TITLE and a Pin DESCRIPTION optimized to be FOUND by shoppers searching for funny/relatable t-shirts and gifts. ' +
+    'TITLE RULES: keyword-rich and descriptive (Pinterest allows up to 100 characters, and longer descriptive titles with real search keywords usually perform BETTER than very short ones). ' +
+    'Lead with the main keyword, include the product type (shirt/tee), the vibe/theme, who it is for, and gift angle when natural. Natural human language, not keyword stuffing. ' +
+    'DESCRIPTION RULES: 2-3 short sentences with natural keywords (funny t-shirt, gift idea, the theme, the animal), ending with a soft call to action to shop. ' +
+    'Also give 6-10 Pinterest hashtags (broad + niche). ' +
+    'Respond ONLY with valid JSON in this exact format: ' +
+    '{"title": "the SEO Pinterest title (up to ~100 chars)", ' +
+    '"description": "the SEO Pinterest description", ' +
+    '"hashtags": "space-separated hashtags starting with #"}';
+
+  const res = await fetch(OPENAI_CHAT_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + OPENAI_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'The t-shirt shows ' + subject + ' with this message: "' + caption + '". Write the SEO-optimized Pinterest title, description and hashtags to reach shoppers searching for funny relatable t-shirts and gift ideas.' }
+      ],
+      temperature: 0.8
+    })
+  });
+
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  if (!res.ok) {
+    const err = new Error('OpenAI chat error ' + res.status);
+    err.status = res.status; err.body = data; throw err;
+  }
+  const content = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!content) throw new Error('Nuk u kthye titull Pinterest nga AI.');
+  let out;
+  try {
+    const clean = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    out = JSON.parse(clean);
+  } catch (e) {
+    throw new Error('Titulli Pinterest s\'u parsua dot: ' + content);
+  }
+  return out;
+}
+
+module.exports = { router, generateImage, generateConcept, generateTextConcept, generateVideoConcept, generateVideoCaption, generatePinterestSeo };
