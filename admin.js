@@ -271,6 +271,10 @@ function buildAdminHtml(token) {
       '<p style="color:#666;">Krijo nje mockup: nje dizajn i rastesishem mbi nje veshje.</p>' +
       '<button id="mock-btn" class="btn">Krijo mockup</button>' +
       '<div id="mock-out" style="margin-top:16px;"></div>' +
+      '<hr style="margin:24px 0;border:none;border-top:1px solid #e3e3e3;">' +
+      '<p style="color:#666;">Posto direkt ne Pinterest: krijon mockup + titull SEO nga dizajni i fundit dhe e publikon.</p>' +
+      '<button id="pin-post-btn" class="btn" style="background:#e60023;">Posto ne Pinterest</button>' +
+      '<div id="pin-post-msg" style="margin-top:10px;font-size:13px;color:#444;"></div>' +
     '</div>' +
  
     // ---- TAB: VIDEOT ----
@@ -435,6 +439,15 @@ function buildAdminHtml(token) {
     '  img.onload = function(){ mockOut.innerHTML = ""; img.style.cssText = "max-width:360px;width:100%;border-radius:12px;"; mockOut.appendChild(img); };' +
     '  img.onerror = function(){ mockOut.innerHTML = "Gabim ne krijimin e mockup-it."; };' +
     '  img.src = url;' +
+    '});' +
+    'var pinPostBtn = document.getElementById("pin-post-btn");' +
+    'var pinPostMsg = document.getElementById("pin-post-msg");' +
+    'pinPostBtn.addEventListener("click", function(){' +
+    '  pinPostBtn.disabled = true; pinPostBtn.textContent = "Po postohet..."; pinPostMsg.textContent = "";' +
+    '  fetch(RAILWAY + "/buffer/pinterest").then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok){ pinPostBtn.textContent = "Postuar ne Pinterest ✓"; pinPostMsg.textContent = "Titulli: " + (res.title || ""); }' +
+    '    else { pinPostBtn.disabled = false; pinPostBtn.textContent = "Provo prap"; pinPostMsg.textContent = "Gabim: " + (res.error || ""); }' +
+    '  }).catch(function(){ pinPostBtn.disabled = false; pinPostBtn.textContent = "Provo prap"; pinPostMsg.textContent = "Nuk u lidh dot."; });' +
     '});' +
  
     // ---- VIDEOT ----
