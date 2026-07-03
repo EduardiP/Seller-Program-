@@ -33,7 +33,7 @@ router.get('/buffer/info', async function (req, res) {
   try {
     if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
     const query =
-      '{ account { organizations { id name channels { id service name } } } }';
+      '{ channels(input: { organizationId: "6a46593a27d1500618d57c54" }) { id service name } }';
     const data = await bufferGraphQL(query);
     res.json({ ok: true, data: data });
   } catch (e) {
