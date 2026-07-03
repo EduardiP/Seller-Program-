@@ -61,7 +61,7 @@ router.get('/buffer/post', async function (req, res) {
  
     for (var i = 0; i < channelIds.length; i++) {
       const mutation =
-        'mutation ($text: String!, $channelId: String!, $url: String!) {' +
+        'mutation ($text: String!, $channelId: ChannelId!, $url: String!) {' +
         '  createPost(input: {' +
         '    text: $text,' +
         '    channelId: $channelId,' +
