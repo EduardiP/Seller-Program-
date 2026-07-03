@@ -1,7 +1,7 @@
 // buffer.js — postimi automatik ne rrjetet sociale permes Buffer (GraphQL API).
 const express = require('express');
 const router = express.Router();
-const { generateVideoCaption } = require('./ai');
+const { generateVideoCaption, generatePinterestSeo } = require('./ai');
 const { pool } = require('./db');
 const { createMockupUrl } = require('./pinterest');
  
@@ -49,37 +49,68 @@ router.get('/buffer/info', async function (req, res) {
   }
 });
  
-// POST: video -> TikTok+Instagram, dizajni -> Pinterest. Titull+hashtag me AI.
-// Perdorim: /buffer/post?video=URL&design=URL&caption=TEKSTI&animal=KAFSHA
+// BOARDS: tregon board-et e nje kanali Pinterest (per boardServiceId).
+router.get('/buffer/boards', async function (req, res) {
+  try {
+    if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
+    const query =
+      'query { channel(input: { id: "' + CHANNELS.pinterest + '" }) { metadata { ... on PinterestMetadata { boards { serviceId name } } } } }';
+    const data = await bufferGraphQL(query);
+    res.json({ ok: true, data: data });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+ 
+// Ndihmes: poston nje MOCKUP te Pinterest me titull SEO (publikon menjehere).
+async function postToPinterest(caption, animal, designUrlOverride) {
+  // Mockup nga dizajni i fundit
+  let mockupUrl = designUrlOverride;
+  if (!mockupUrl) mockupUrl = await createMockupUrl(null);
+ 
+  // Titull + pershkrim SEO me AI
+  const seo = await generatePinterestSeo(caption || '', animal || '');
+  const title = (seo.title || 'Funny t-shirt').slice(0, 100);
+  const desc = (seo.description || '') + '\n\n' + (seo.hashtags || '');
+ 
+  const mutation =
+    'mutation ($text: String!, $channelId: ChannelId!, $url: String!, $title: String!, $link: String!, $board: String!) {' +
+    '  createPost(input: {' +
+    '    text: $text,' +
+    '    channelId: $channelId,' +
+    '    schedulingType: automatic,' +
+    '    mode: now,' +
+    '    assets: [{ image: { url: $url } }],' +
+    '    metadata: { pinterest: { title: $title, url: $link, boardServiceId: $board } }' +
+    '  }) {' +
+    '    ... on PostActionSuccess { post { id dueAt } }' +
+    '    ... on MutationError { message }' +
+    '  }' +
+    '}';
+  const data = await bufferGraphQL(mutation, {
+    text: desc, channelId: CHANNELS.pinterest, url: mockupUrl, title: title, link: SHOP_URL, board: PINTEREST_BOARD
+  });
+  return { mockupUrl: mockupUrl, title: title, response: data };
+}
+ 
+// POST: video -> TikTok+Instagram, mockup -> Pinterest. Publikon menjehere.
+// Perdorim: /buffer/post?video=URL&caption=TEKSTI&animal=KAFSHA
 router.get('/buffer/post', async function (req, res) {
   try {
     if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
     const videoUrl = req.query.video;
     if (!videoUrl) return res.status(400).json({ ok: false, error: 'Mungon video URL.' });
  
-    // Mockup per Pinterest: krijon mockup nga dizajni i fundit dhe e ngarkon te Cloudinary.
-    let pinterestUrl = req.query.design;
-    if (!pinterestUrl) {
-      try {
-        pinterestUrl = await createMockupUrl(null);
-      } catch (me) {
-        console.error('Mockup gabim:', me.message);
-      }
-    }
- 
-    // Titulli/pershkrimi me AI (SEO)
+    // Titulli/pershkrimi i videos me AI (SEO)
     let text = req.query.text;
-    let title = req.query.title;
     if (!text) {
       const cap = await generateVideoCaption(req.query.caption || '', req.query.animal || '');
       text = (cap.caption || '') + '\n\n' + (cap.hashtags || '');
-      if (!title) title = cap.title || 'Funny design';
     }
-    if (!title) title = 'Funny design';
  
     const results = [];
  
-    // 1) VIDEO -> TikTok + Instagram
+    // 1) VIDEO -> TikTok + Instagram (publikon menjehere)
     const videoTargets = [
       { channelId: CHANNELS.tiktok, meta: '' },
       { channelId: CHANNELS.instagram, meta: ', metadata: { instagram: { type: reel, shouldShareToFeed: true } }' }
@@ -92,7 +123,7 @@ router.get('/buffer/post', async function (req, res) {
         '    text: $text,' +
         '    channelId: $channelId,' +
         '    schedulingType: automatic,' +
-        '    mode: addToQueue,' +
+        '    mode: now,' +
         '    assets: [{ video: { url: $url } }]' +
         t.meta +
         '  }) {' +
@@ -104,42 +135,38 @@ router.get('/buffer/post', async function (req, res) {
       results.push({ target: 'video', channelId: t.channelId, response: data });
     }
  
-    // 2) DIZAJNI (imazh) -> Pinterest (me link destinacioni)
-    if (pinterestUrl) {
-      const mutation =
-        'mutation ($text: String!, $channelId: ChannelId!, $url: String!, $title: String!, $link: String!, $board: String!) {' +
-        '  createPost(input: {' +
-        '    text: $text,' +
-        '    channelId: $channelId,' +
-        '    schedulingType: automatic,' +
-        '    mode: addToQueue,' +
-        '    assets: [{ image: { url: $url } }],' +
-        '    metadata: { pinterest: { title: $title, url: $link, boardServiceId: $board } }' +
-        '  }) {' +
-        '    ... on PostActionSuccess { post { id dueAt } }' +
-        '    ... on MutationError { message }' +
-        '  }' +
-        '}';
-      const data = await bufferGraphQL(mutation, {
-        text: text, channelId: CHANNELS.pinterest, url: pinterestUrl, title: title, link: SHOP_URL, board: PINTEREST_BOARD
-      });
-      results.push({ target: 'pinterest', channelId: CHANNELS.pinterest, response: data });
+    // 2) MOCKUP -> Pinterest (titull SEO, publikon menjehere)
+    try {
+      const pin = await postToPinterest(req.query.caption || '', req.query.animal || '', null);
+      results.push({ target: 'pinterest', mockupUrl: pin.mockupUrl, title: pin.title, response: pin.response });
+    } catch (pe) {
+      results.push({ target: 'pinterest', error: pe.message });
     }
  
-    res.json({ ok: true, text: text, title: title, designUrl: pinterestUrl, results: results });
+    res.json({ ok: true, text: text, results: results });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
  
-// BOARDS: tregon board-et e nje kanali Pinterest (per boardServiceId).
-router.get('/buffer/boards', async function (req, res) {
+// POST VETEM PINTEREST: mockup + titull SEO -> Pinterest (pa tiktok/instagram).
+// Perdorim: /buffer/pinterest?caption=TEKSTI&animal=KAFSHA
+router.get('/buffer/pinterest', async function (req, res) {
   try {
     if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
-    const query =
-      'query { channel(input: { id: "' + CHANNELS.pinterest + '" }) { metadata { ... on PinterestMetadata { boards { serviceId name } } } } }';
-    const data = await bufferGraphQL(query);
-    res.json({ ok: true, data: data });
+ 
+    let caption = req.query.caption;
+    let animal = req.query.animal;
+    // Nese s'jane dhene, marrim dizajnin e fundit nga databaza per mesazhin.
+    if (!caption) {
+      const d = await pool.query(
+        "SELECT caption, animal FROM designs WHERE image_url IS NOT NULL ORDER BY created_at DESC LIMIT 1"
+      );
+      if (d.rows.length > 0) { caption = d.rows[0].caption; animal = d.rows[0].animal; }
+    }
+ 
+    const pin = await postToPinterest(caption || '', animal || '', null);
+    res.json({ ok: true, mockupUrl: pin.mockupUrl, title: pin.title, response: pin.response });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
