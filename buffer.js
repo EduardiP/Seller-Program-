@@ -129,4 +129,17 @@ router.get('/buffer/post', async function (req, res) {
   }
 });
  
+// BOARDS: tregon board-et e nje kanali Pinterest (per boardServiceId).
+router.get('/buffer/boards', async function (req, res) {
+  try {
+    if (!BUFFER_KEY) return res.status(500).json({ ok: false, error: 'Mungon BUFFER_KEY te Railway.' });
+    const query =
+      'query { channel(input: { id: "' + CHANNELS.pinterest + '" }) { metadata { ... on PinterestMetadata { boards { serviceId name } } } } }';
+    const data = await bufferGraphQL(query);
+    res.json({ ok: true, data: data });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+ 
 module.exports = { router, bufferGraphQL, ORG_ID };
