@@ -116,4 +116,15 @@ async function createMockupUrl(designUrl) {
   return result.secure_url;
 }
 
+// Kthen URL-n e nje mockup-i te krijuar nga nje dizajn i dhene (per modal-in Publiko).
+router.get('/pinterest/mockup-url', async function (req, res) {
+  try {
+    const designUrl = req.query.image || null;
+    const url = await createMockupUrl(designUrl);
+    res.json({ ok: true, url: url });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 module.exports = { router, initPinterest, generateMockup, createMockupUrl };
