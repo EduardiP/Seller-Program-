@@ -272,7 +272,9 @@ function buildAdminHtml(token) {
       '<button id="mock-btn" class="btn">Krijo mockup</button>' +
       '<div id="mock-out" style="margin-top:16px;"></div>' +
       '<hr style="margin:24px 0;border:none;border-top:1px solid #e3e3e3;">' +
-      '<p style="color:#666;">Posto direkt ne Pinterest: krijon mockup + titull SEO nga dizajni i fundit dhe e publikon.</p>' +
+      '<p style="color:#666;">Posto direkt ne Pinterest: krijon mockup + titull SEO nga dizajni i fundit dhe e planifikon.</p>' +
+      '<label style="font-size:13px;color:#444;">Orari (kur te postohet): </label>' +
+      '<input id="pin-when" type="datetime-local" style="padding:6px;border:1px solid #ccc;border-radius:6px;margin-bottom:10px;"><br>' +
       '<button id="pin-post-btn" class="btn" style="background:#e60023;">Posto ne Pinterest</button>' +
       '<div id="pin-post-msg" style="margin-top:10px;font-size:13px;color:#444;"></div>' +
     '</div>' +
@@ -280,6 +282,8 @@ function buildAdminHtml(token) {
     // ---- TAB: VIDEOT ----
     '<div class="panel" id="tab-videot">' +
       '<p style="color:#666;">Krijo nje video funny (kafsha vepron mesazhin e dizajnit). Mund te zgjase 1-3 min.</p>' +
+      '<label style="font-size:13px;color:#444;">Orari (kur te postohet ne TikTok+Instagram): </label>' +
+      '<input id="vid-when" type="datetime-local" style="padding:6px;border:1px solid #ccc;border-radius:6px;margin-bottom:10px;"><br>' +
       '<button id="vid-btn" class="btn">Krijo video</button>' +
       '<div id="vid-status" style="color:#666;margin-top:10px;min-height:22px;"></div>' +
       '<div id="vid-scene" style="font-size:13px;color:#444;margin-top:6px;"></div>' +
@@ -443,9 +447,11 @@ function buildAdminHtml(token) {
     'var pinPostBtn = document.getElementById("pin-post-btn");' +
     'var pinPostMsg = document.getElementById("pin-post-msg");' +
     'pinPostBtn.addEventListener("click", function(){' +
-    '  pinPostBtn.disabled = true; pinPostBtn.textContent = "Po postohet..."; pinPostMsg.textContent = "";' +
-    '  fetch(RAILWAY + "/buffer/pinterest").then(function(r){return r.json();}).then(function(res){' +
-    '    if(res.ok){ pinPostBtn.textContent = "Postuar ne Pinterest ✓"; pinPostMsg.textContent = "Titulli: " + (res.title || ""); }' +
+    '  pinPostBtn.disabled = true; pinPostBtn.textContent = "Po planifikohet..."; pinPostMsg.textContent = "";' +
+    '  var w = document.getElementById("pin-when").value;' +
+    '  var u = RAILWAY + "/buffer/pinterest" + (w ? ("?when=" + encodeURIComponent(w)) : "");' +
+    '  fetch(u).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok){ pinPostBtn.textContent = "Planifikuar ne Pinterest ✓"; pinPostMsg.textContent = "Titulli: " + (res.title || "") + " | Ora: " + (res.dueAt || ""); }' +
     '    else { pinPostBtn.disabled = false; pinPostBtn.textContent = "Provo prap"; pinPostMsg.textContent = "Gabim: " + (res.error || ""); }' +
     '  }).catch(function(){ pinPostBtn.disabled = false; pinPostBtn.textContent = "Provo prap"; pinPostMsg.textContent = "Nuk u lidh dot."; });' +
     '});' +
@@ -474,9 +480,10 @@ function buildAdminHtml(token) {
     '        var bmsg = document.getElementById("buffer-msg");' +
     '        sendBtn.addEventListener("click", function(){' +
     '          sendBtn.disabled = true; sendBtn.textContent = "Po dergohet..."; bmsg.textContent = "";' +
-    '          var u = RAILWAY + "/buffer/post?video=" + encodeURIComponent(res.videoUrl) + "&caption=" + encodeURIComponent(res.caption || "") + "&animal=" + encodeURIComponent(res.animal || "");' +
+    '          var w = document.getElementById("vid-when").value;' +
+    '          var u = RAILWAY + "/buffer/post?video=" + encodeURIComponent(res.videoUrl) + "&caption=" + encodeURIComponent(res.caption || "") + "&animal=" + encodeURIComponent(res.animal || "") + (w ? ("&when=" + encodeURIComponent(w)) : "");' +
     '          fetch(u).then(function(r){return r.json();}).then(function(b){' +
-    '            if(b.ok){ sendBtn.textContent = "Derguar ne Buffer ✓"; bmsg.textContent = "U shtua ne rradhe te 3 kanalet."; }' +
+    '            if(b.ok){ sendBtn.textContent = "Planifikuar ✓"; bmsg.textContent = "TikTok + Instagram, ora: " + (b.dueAt || ""); }' +
     '            else { sendBtn.disabled = false; sendBtn.textContent = "Provo prap"; bmsg.textContent = "Gabim: " + (b.error || ""); }' +
     '          }).catch(function(){ sendBtn.disabled = false; sendBtn.textContent = "Provo prap"; bmsg.textContent = "Nuk u lidh dot."; });' +
     '        });' +
