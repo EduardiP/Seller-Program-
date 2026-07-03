@@ -280,13 +280,20 @@ function buildAdminHtml(token) {
  
     // ---- TAB: URDHERAT ----
     '<div class="panel" id="tab-urdherat">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
-        '<h2 style="margin:0;font-size:18px;">Urdherat — dizajnet</h2>' +
-        '<button id="ord-all-btn" class="btn-light" style="padding:8px 14px;border-radius:8px;">Shiko te gjitha</button>' +
+      '<div id="ord-home">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+          '<h2 style="margin:0;font-size:16px;">Urdherat — dizajnet</h2>' +
+          '<button id="ord-all-btn" class="btn-light" style="padding:6px 12px;border-radius:8px;font-size:13px;">Shiko te gjitha</button>' +
+        '</div>' +
+        '<div id="ord-carousel" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;"></div>' +
+        // seksioni i vogel i orareve/publikimeve (do mbushet me vone)
+        '<div style="margin-top:18px;">' +
+          '<h3 style="margin:0 0 8px;font-size:14px;color:#444;">Publikimet & oraret</h3>' +
+          '<div id="ord-schedule" style="background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:12px;font-size:13px;color:#888;">Ketu do shfaqen produktet e krijuara per publikim dhe oraret e caktuara (se shpejti).</div>' +
+        '</div>' +
       '</div>' +
-      '<div id="ord-carousel" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;"></div>' +
-      // dritarja e te gjitha dizajneve (brenda urdherat)
-      '<div id="ord-full" style="display:none;margin-top:16px;">' +
+      // dritarja e te gjitha dizajneve (mbi gjithcka)
+      '<div id="ord-full" style="display:none;">' +
         '<button id="ord-back" class="btn-light" style="margin-bottom:16px;padding:8px 14px;border-radius:8px;">↰ Kthehu</button>' +
         '<h3 style="margin:0 0 16px;">Te gjitha dizajnet</h3>' +
         '<div id="ord-full-grid" class="grid"></div>' +
@@ -338,11 +345,10 @@ function buildAdminHtml(token) {
  
     // ---- MODAL PUBLIKIMI (brenda urdherat) ----
     '<div id="pub-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">' +
-      '<div style="background:#fff;border-radius:12px;padding:20px;max-width:380px;width:90%;position:relative;">' +
-        '<button id="pub-x" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>' +
-        '<h3 style="margin:0 0 12px;">Publiko dizajnin</h3>' +
-        '<img id="pub-img" src="" style="width:100%;border-radius:8px;background:#eee;margin-bottom:12px;">' +
-        '<div id="pub-body" style="font-size:13px;color:#444;margin-bottom:12px;">Publikimet (versioni do vije se shpejti).</div>' +
+      '<div style="background:#fff;border-radius:12px;padding:24px;max-width:560px;width:92%;position:relative;">' +
+        '<button id="pub-x" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>' +
+        '<h3 style="margin:0 0 16px;">Publiko dizajnin</h3>' +
+        '<div id="pub-body" style="font-size:14px;color:#444;margin-bottom:16px;min-height:120px;">Permbajtja e publikimit do vije se shpejti.</div>' +
         '<button id="pub-send" class="btn btn-green" style="width:100%;">Dergo</button>' +
         '<div id="pub-msg" style="margin-top:10px;font-size:13px;color:#444;"></div>' +
       '</div>' +
@@ -477,7 +483,7 @@ function buildAdminHtml(token) {
     'function ordCard(d, compact){' +
     '  var card = document.createElement("div");' +
     '  card.className = "card";' +
-    '  if(compact){ card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:10px;min-width:180px;max-width:180px;flex:0 0 auto;"; }' +
+    '  if(compact){ card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:8px;padding:8px;min-width:130px;max-width:130px;flex:0 0 auto;"; }' +
     '  var badge = (d.status === "approved") ? \'<span style="font-size:10px;color:#1a7f37;">✓ Prodhuar</span>\' : \'<span style="font-size:10px;color:#a67;">Ne pritje</span>\';' +
     '  card.innerHTML =' +
     '    \'<img src="\' + d.image_url + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
@@ -505,14 +511,14 @@ function buildAdminHtml(token) {
     '  }).catch(function(){});' +
     '}' +
     'document.getElementById("ord-all-btn").addEventListener("click", function(){' +
+    '  document.getElementById("ord-home").style.display = "none";' +
     '  ordFull.style.display = "block"; ordFullGrid.innerHTML = "";' +
     '  fetch("/admin/all?token=" + encodeURIComponent(TOKEN)).then(function(r){return r.json();}).then(function(res){' +
     '    if(res.ok && res.designs){ res.designs.forEach(function(d){ ordFullGrid.appendChild(ordCard(d, false)); }); }' +
     '  }).catch(function(){});' +
     '});' +
-    'document.getElementById("ord-back").addEventListener("click", function(){ ordFull.style.display = "none"; });' +
+    'document.getElementById("ord-back").addEventListener("click", function(){ ordFull.style.display = "none"; document.getElementById("ord-home").style.display = "block"; });' +
     'function openPubModal(d){' +
-    '  document.getElementById("pub-img").src = d.image_url;' +
     '  document.getElementById("pub-msg").textContent = "";' +
     '  var ov = document.getElementById("pub-overlay"); ov.style.display = "flex";' +
     '  document.getElementById("pub-x").onclick = function(){ ov.style.display = "none"; };' +
