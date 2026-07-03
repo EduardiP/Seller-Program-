@@ -193,6 +193,18 @@ router.get('/admin/pending', requireAdmin, async function (req, res) {
   }
 });
  
+router.get('/admin/all', requireAdmin, async function (req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT id, image_url, caption, caption_sq, animal, status, printify_product_id, created_at
+         FROM designs WHERE image_url IS NOT NULL ORDER BY created_at DESC`
+    );
+    res.json({ ok: true, designs: result.rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+ 
 router.get('/admin/reject', requireAdmin, async function (req, res) {
   try {
     const id = parseInt(req.query.id, 10);
@@ -238,9 +250,9 @@ function buildAdminHtml(token) {
  
     '<div class="tabs">' +
       '<button class="tab active" data-tab="dizajnet">Dizajnet</button>' +
+      '<button class="tab" data-tab="urdherat">Urdherat</button>' +
       '<button class="tab" data-tab="mockupet">Pinterest</button>' +
-      '<button class="tab" data-tab="videot">Videot</button>' +
-      '<button class="tab" data-tab="postimet">Buffer</button>' +
+      '<button class="tab" data-tab="videot">Buffer</button>' +
     '</div>' +
  
     // ---- TAB: DIZAJNET ----
@@ -263,6 +275,21 @@ function buildAdminHtml(token) {
         '<button id="back-btn" class="btn-light" style="margin-bottom:16px;padding:8px 14px;border-radius:8px;font-size:16px;">↰ Kthehu</button>' +
         '<h2 style="margin:0 0 16px;font-size:18px;">Dizajnet e pranuara</h2>' +
         '<div id="approved-grid" class="grid"></div>' +
+      '</div>' +
+    '</div>' +
+ 
+    // ---- TAB: URDHERAT ----
+    '<div class="panel" id="tab-urdherat">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<h2 style="margin:0;font-size:18px;">Urdherat — dizajnet</h2>' +
+        '<button id="ord-all-btn" class="btn-light" style="padding:8px 14px;border-radius:8px;">Shiko te gjitha</button>' +
+      '</div>' +
+      '<div id="ord-carousel" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;"></div>' +
+      // dritarja e te gjitha dizajneve (brenda urdherat)
+      '<div id="ord-full" style="display:none;margin-top:16px;">' +
+        '<button id="ord-back" class="btn-light" style="margin-bottom:16px;padding:8px 14px;border-radius:8px;">↰ Kthehu</button>' +
+        '<h3 style="margin:0 0 16px;">Te gjitha dizajnet</h3>' +
+        '<div id="ord-full-grid" class="grid"></div>' +
       '</div>' +
     '</div>' +
  
@@ -291,9 +318,7 @@ function buildAdminHtml(token) {
     '</div>' +
  
     // ---- TAB: POSTIMET ----
-    '<div class="panel" id="tab-postimet">' +
-      '<p style="color:#666;">Postimi automatik ne rrjetet sociale (Buffer). Se shpejti.</p>' +
-    '</div>' +
+    '<div class="panel" id="tab-postimet-removed" style="display:none;"></div>' +
  
     '</div>' +
  
@@ -308,6 +333,18 @@ function buildAdminHtml(token) {
           '<button id="modal-confirm" class="btn btn-green" style="flex:1;">Konfirmo</button>' +
           '<button id="modal-cancel" class="btn-light" style="flex:1;padding:10px;border-radius:6px;">Anulo</button>' +
         '</div>' +
+      '</div>' +
+    '</div>' +
+ 
+    // ---- MODAL PUBLIKIMI (brenda urdherat) ----
+    '<div id="pub-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:1000;">' +
+      '<div style="background:#fff;border-radius:12px;padding:20px;max-width:380px;width:90%;position:relative;">' +
+        '<button id="pub-x" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;">✕</button>' +
+        '<h3 style="margin:0 0 12px;">Publiko dizajnin</h3>' +
+        '<img id="pub-img" src="" style="width:100%;border-radius:8px;background:#eee;margin-bottom:12px;">' +
+        '<div id="pub-body" style="font-size:13px;color:#444;margin-bottom:12px;">Publikimet (versioni do vije se shpejti).</div>' +
+        '<button id="pub-send" class="btn btn-green" style="width:100%;">Dergo</button>' +
+        '<div id="pub-msg" style="margin-top:10px;font-size:13px;color:#444;"></div>' +
       '</div>' +
     '</div>' +
  
@@ -432,6 +469,58 @@ function buildAdminHtml(token) {
     '    .catch(function () {});' +
     '}' +
     'loadPending();' +
+ 
+    // ---- URDHERAT ----
+    'var ordCarousel = document.getElementById("ord-carousel");' +
+    'var ordFull = document.getElementById("ord-full");' +
+    'var ordFullGrid = document.getElementById("ord-full-grid");' +
+    'function ordCard(d, compact){' +
+    '  var card = document.createElement("div");' +
+    '  card.className = "card";' +
+    '  if(compact){ card.style.cssText = "background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:10px;min-width:180px;max-width:180px;flex:0 0 auto;"; }' +
+    '  var badge = (d.status === "approved") ? \'<span style="font-size:10px;color:#1a7f37;">✓ Prodhuar</span>\' : \'<span style="font-size:10px;color:#a67;">Ne pritje</span>\';' +
+    '  card.innerHTML =' +
+    '    \'<img src="\' + d.image_url + \'" style="width:100%;border-radius:8px;background:#eee;">\' +' +
+    '    \'<p style="font-size:12px;color:#444;margin:6px 0 4px;font-weight:600;">\' + (d.caption_sq || d.caption || "") + \'</p>\' +' +
+    '    badge +' +
+    '    \'<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">\' +' +
+    '      \'<button class="o-approve btn btn-green" style="flex:1;padding:6px;font-size:12px;">Prano</button>\' +' +
+    '      \'<button class="o-reject btn-light" style="flex:1;padding:6px;border-radius:6px;font-size:12px;">Hiq</button>\' +' +
+    '    \'</div>\' +' +
+    '    \'<button class="o-pub btn" style="width:100%;margin-top:6px;padding:6px;font-size:12px;background:#3a3a8a;">Publiko</button>\';' +
+    '  card.querySelector(".o-approve").addEventListener("click", function(){ openApproveModal(d); });' +
+    '  card.querySelector(".o-reject").addEventListener("click", function(){' +
+    '    fetch("/admin/reject?id=" + d.id + "&token=" + encodeURIComponent(TOKEN)).then(function(r){return r.json();}).then(function(res){ if(res.ok){ card.remove(); } });' +
+    '  });' +
+    '  card.querySelector(".o-pub").addEventListener("click", function(){ openPubModal(d); });' +
+    '  return card;' +
+    '}' +
+    'function loadOrders(){' +
+    '  ordCarousel.innerHTML = "";' +
+    '  fetch("/admin/all?token=" + encodeURIComponent(TOKEN)).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok && res.designs){' +
+    '      if(res.designs.length === 0){ ordCarousel.innerHTML = \'<p style="color:#888;">Ende asnje dizajn.</p>\'; }' +
+    '      else { res.designs.forEach(function(d){ ordCarousel.appendChild(ordCard(d, true)); }); }' +
+    '    }' +
+    '  }).catch(function(){});' +
+    '}' +
+    'document.getElementById("ord-all-btn").addEventListener("click", function(){' +
+    '  ordFull.style.display = "block"; ordFullGrid.innerHTML = "";' +
+    '  fetch("/admin/all?token=" + encodeURIComponent(TOKEN)).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok && res.designs){ res.designs.forEach(function(d){ ordFullGrid.appendChild(ordCard(d, false)); }); }' +
+    '  }).catch(function(){});' +
+    '});' +
+    'document.getElementById("ord-back").addEventListener("click", function(){ ordFull.style.display = "none"; });' +
+    'function openPubModal(d){' +
+    '  document.getElementById("pub-img").src = d.image_url;' +
+    '  document.getElementById("pub-msg").textContent = "";' +
+    '  var ov = document.getElementById("pub-overlay"); ov.style.display = "flex";' +
+    '  document.getElementById("pub-x").onclick = function(){ ov.style.display = "none"; };' +
+    '  document.getElementById("pub-send").onclick = function(){' +
+    '    document.getElementById("pub-msg").textContent = "Publikimi do lidhet se shpejti.";' +
+    '  };' +
+    '}' +
+    'loadOrders();' +
  
     // ---- MOCKUPET ----
     'var mockBtn = document.getElementById("mock-btn");' +
