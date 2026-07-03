@@ -73,8 +73,9 @@ router.get('/buffer/boards', async function (req, res) {
 });
  
 // Ndihmes: planifikon nje MOCKUP te Pinterest me titull SEO (Buffer poston ne orar).
-async function schedulePinterest(caption, animal, when) {
-  const mockupUrl = await createMockupUrl(null);
+async function schedulePinterest(caption, animal, when, designUrl) {
+  // Nese jepet nje mockup gati (nga modal-i Publiko), perdore ate; perndryshe krijo te ri.
+  const mockupUrl = designUrl ? designUrl : await createMockupUrl(null);
   const seo = await generatePinterestSeo(caption || '', animal || '');
   const title = (seo.title || 'Funny t-shirt').slice(0, 100);
   const desc = (seo.description || '') + '\n\n' + (seo.hashtags || '');
@@ -162,7 +163,7 @@ router.get('/buffer/pinterest', async function (req, res) {
       );
       if (d.rows.length > 0) { caption = d.rows[0].caption; animal = d.rows[0].animal; }
     }
-    const pin = await schedulePinterest(caption || '', animal || '', req.query.when);
+    const pin = await schedulePinterest(caption || '', animal || '', req.query.when, req.query.design || null);
     res.json({ ok: true, mockupUrl: pin.mockupUrl, title: pin.title, dueAt: pin.dueAt, response: pin.response });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
