@@ -24,7 +24,7 @@ async function initPublications() {
 initPublications().catch(function (e) { console.error('initPublications:', e.message); });
 const { printifyFetch, getShopId } = require('./products');
 const cloudinary = require('cloudinary').v2;
- 
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -688,20 +688,24 @@ function buildAdminHtml(token) {
     // ---- MOCKUPET ----
     'var mockBtn = document.getElementById("mock-btn");' +
     'var mockOut = document.getElementById("mock-out");' +
+    'var pinMockupUrl = null;' +
     'mockBtn.addEventListener("click", function(){' +
     '  mockOut.innerHTML = "Po krijohet...";' +
-    '  var url = RAILWAY + "/pinterest/test-mockup?t=" + Date.now();' +
-    '  var img = new Image();' +
-    '  img.onload = function(){ mockOut.innerHTML = ""; img.style.cssText = "max-width:360px;width:100%;border-radius:12px;"; mockOut.appendChild(img); };' +
-    '  img.onerror = function(){ mockOut.innerHTML = "Gabim ne krijimin e mockup-it."; };' +
-    '  img.src = url;' +
+    '  pinMockupUrl = null;' +
+    '  var pinPostBtn2 = document.getElementById("pin-post-btn");' +
+    '  pinPostBtn2.disabled = false; pinPostBtn2.textContent = "Posto ne Pinterest";' +
+    '  fetch(RAILWAY + "/pinterest/mockup-url?t=" + Date.now()).then(function(r){return r.json();}).then(function(res){' +
+    '    if(res.ok && res.url){ pinMockupUrl = res.url; mockOut.innerHTML = \'<img src="\' + res.url + \'" style="max-width:360px;width:100%;border-radius:12px;">\'; }' +
+    '    else { mockOut.innerHTML = "Gabim: " + (res.error || ""); }' +
+    '  }).catch(function(){ mockOut.innerHTML = "Nuk u lidh dot."; });' +
     '});' +
     'var pinPostBtn = document.getElementById("pin-post-btn");' +
     'var pinPostMsg = document.getElementById("pin-post-msg");' +
     'pinPostBtn.addEventListener("click", function(){' +
+    '  if(!pinMockupUrl){ pinPostMsg.textContent = "Krijo nje mockup se pari."; return; }' +
     '  pinPostBtn.disabled = true; pinPostBtn.textContent = "Po planifikohet..."; pinPostMsg.textContent = "";' +
     '  var w = document.getElementById("pin-when").value;' +
-    '  var u = RAILWAY + "/buffer/pinterest" + (w ? ("?when=" + encodeURIComponent(w)) : "");' +
+    '  var u = RAILWAY + "/buffer/pinterest?design=" + encodeURIComponent(pinMockupUrl) + (w ? ("&when=" + encodeURIComponent(w)) : "");' +
     '  fetch(u).then(function(r){return r.json();}).then(function(res){' +
     '    if(res.ok){ pinPostBtn.textContent = "Planifikuar ne Pinterest ✓"; pinPostMsg.textContent = "Titulli: " + (res.title || "") + " | Ora: " + (res.dueAt || ""); }' +
     '    else { pinPostBtn.disabled = false; pinPostBtn.textContent = "Provo prap"; pinPostMsg.textContent = "Gabim: " + (res.error || ""); }' +
