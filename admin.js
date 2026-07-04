@@ -615,11 +615,12 @@ function buildAdminHtml(token) {
     // krijo mockup (perdor dizajnin e klikuar)
     'document.getElementById("pub-mock-btn").addEventListener("click", function(){' +
     '  var out = document.getElementById("pub-mock-out"); out.innerHTML = "Po krijohet...";' +
-    '  var u = RAILWAY + "/pinterest/mockup-url?image=" + encodeURIComponent(pubState.design.image_url);' +
+    '  pubState.mockupUrl = null; updatePubSend();' +
+    '  var u = RAILWAY + "/pinterest/mockup-url?image=" + encodeURIComponent(pubState.design.image_url) + "&t=" + Date.now();' +
     '  fetch(u).then(function(r){return r.json();}).then(function(res){' +
     '    if(res.ok && res.url){ pubState.mockupUrl = res.url; out.innerHTML = \'<img src="\' + res.url + \'" style="width:100%;border-radius:8px;">\'; updatePubSend(); }' +
-    '    else { out.innerHTML = "Gabim: " + (res.error || ""); }' +
-    '  }).catch(function(){ out.innerHTML = "Nuk u lidh dot."; });' +
+    '    else { out.innerHTML = "Gabim: " + (res.error || ""); updatePubSend(); }' +
+    '  }).catch(function(){ out.innerHTML = "Nuk u lidh dot."; updatePubSend(); });' +
     '});' +
     // krijo video (perdor dizajnin e klikuar)
     'document.getElementById("pub-vid-btn").addEventListener("click", function(){' +
