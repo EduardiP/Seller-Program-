@@ -75,20 +75,20 @@ function buildTypographyPrompt(concept) {
 }
  
 function buildDesignPrompt(concept) {
-  return 'A high-quality vintage retro t-shirt graphic design on a fully transparent background. ' +
+  return 'A high-quality vintage retro t-shirt graphic design on a FULLY TRANSPARENT background (alpha transparency, NO background at all). ' +
     'The main subject is ' + concept.animal + ' with a strongly exaggerated, comedic ' + concept.expression + ' expression ' +
     'that clearly and humorously matches the mood of the caption — the facial expression should be the funniest part, very expressive and over-the-top. ' +
     'Drawn in a distressed vintage screen-print / halftone illustration style. ' +
-    'You may vary the composition freely while staying vintage: ' +
-    'sometimes a retro sunburst or circle, sometimes a simple distressed badge, sometimes just textured background shapes, ' +
-    'sometimes minimal — explore different vintage layouts, do not always use the same sunset-mountains-trees scene. ' +
+    'The design is an ISOLATED graphic (animal + text only) that sits directly on transparency — ' +
+    'do NOT add any background scene, NO circle, NO sunburst, NO badge, NO background shapes, NO rectangle, NO backdrop of any kind. ' +
+    'Only the animal and the text should be visible; everything else must be fully transparent. ' +
     'Use a warm retro color palette (black, burnt-orange, cream, muted tones), but vary accent colors between designs. ' +
     'The funny caption text reads exactly: "' + concept.text + '". ' +
     'The text is large, bold, hand-lettered, in a mix of grunge brush and condensed vintage fonts, ' +
     'arranged artistically so text and animal share the space without overlapping, ' +
     'all text fully inside the frame with margin, nothing cut off. ' +
     'Polished professional t-shirt print, distressed vintage texture, ' +
-    'transparent background, no photo background, sticker-ready, high quality.';
+    'transparent background, no photo background, no background color, sticker-ready, high quality PNG with transparency.';
 }
  
 router.get('/admin/generate-one', requireAdmin, async function (req, res) {
