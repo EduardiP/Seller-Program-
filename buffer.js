@@ -18,7 +18,7 @@ const CHANNELS = {
 };
  
 // Linku i dyqanit (destinacioni per pinet e Pinterest).
-const SHOP_URL = 'https://impressarel.myshopify.com';
+const SHOP_URL = 'https://impressarel.myshopify.com/?utm_source=pinterest&utm_medium=social&utm_campaign=pinterest-bio';
  
 // Board-i i Pinterest ku shkojne pinet.
 const PINTEREST_BOARD = '893612819751675733';
