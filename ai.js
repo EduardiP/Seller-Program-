@@ -27,9 +27,20 @@ async function generateConcept() {
     '(awkward social moments, procrastination, being tired, overthinking, introvert struggles, ' +
     'work/Monday pain, pretending to be okay, avoiding people, weekend vs reality, ' +
     'trust issues, being broke, anxiety humor, lazy habits, petty thoughts). ' +
-    'The animal\'s expression should comically mirror the emotion of the joke. ' +
+    'The animal\'s expression MUST clearly and comically mirror the exact emotion of the caption — if the joke is about being tired, the animal looks exhausted; if it is about being done with people, the animal looks annoyed. The face must match the words so the whole design reads as one clear joke. ' +
     'IMPORTANT FOCUS: the humor should feel like a fun personality badge — the kind of relatable joke where someone instantly thinks "haha that is literally me" and would happily WEAR it to show others what they are like (their vibe: introvert, lazy, sarcastic, always tired, socially awkward, avoids people, etc). ' +
     'Keep it light and genuinely funny (never deep, heavy, abstract, or random) — a playful everyday truth people recognize in themselves and want to show off. ' +
+    'STUDY THESE GOOD EXAMPLES (match this exact style, length and punch — short, instantly clear, one quick twist): ' +
+    '"My hobbies include avoiding my hobbies (and people)"; ' +
+    '"Weekend plans: travel. Reality: survived the couch"; ' +
+    '"I am not lazy, I am on energy saving mode"; ' +
+    '"Of course I talk to myself, sometimes I need expert advice". ' +
+    'NOTICE: each is short, lands in under 2 seconds, has ONE clear funny twist, and reads like a personality flex. ' +
+    'AVOID BAD OUTPUTS like these (too long, too abstract, confusing, or not funny): ' +
+    '"Being an adult is like folding a fitted sheet, nobody really knows how"; ' +
+    '"That awkward moment when pretending to be busy becomes your full-time job". ' +
+    'Those fail because they ramble, over-explain, or have no sharp punchline. ' +
+    'RULES OF FUNNY: keep it SHORT (ideally under 8 words, max ~12), ONE punchline only, no over-explaining, no rambling metaphors, no words that sound off in translation. The twist should hit instantly. ' +
     'EXPLORE WIDELY across many themes. Do NOT default to food jokes. ' +
     'STRICT RULES: ' +
     '1) The caption must be ORIGINAL, short, punchy, and ACTUALLY funny (not random, not nonsense). ' +
@@ -225,6 +236,15 @@ async function generateTextConcept() {
     '2) It must make sense as words alone on a shirt, like a clever quote or statement. ' +
     'IMPORTANT FOCUS: the slogan should feel like a fun personality badge — the kind of relatable, funny line where someone instantly thinks "haha that is literally me" and would happily WEAR it to show others their vibe (introvert, lazy, sarcastic, always tired, socially awkward, avoids people, etc). ' +
     'Keep it light and genuinely funny (never deep, heavy, abstract, or random) — a playful everyday truth people recognize in themselves and want to show off. ' +
+    'STUDY THESE GOOD EXAMPLES (match this exact style, length and punch): ' +
+    '"My hobbies include avoiding my hobbies (and people)"; ' +
+    '"Weekend plans: travel. Reality: survived the couch"; ' +
+    '"I am not lazy, I am on energy saving mode"; ' +
+    '"Of course I talk to myself, sometimes I need expert advice". ' +
+    'NOTICE: each is short, lands in under 2 seconds, has ONE clear funny twist, and reads like a personality flex. ' +
+    'AVOID BAD OUTPUTS (too long, abstract, confusing): ' +
+    '"Being an adult is like folding a fitted sheet, nobody really knows how". ' +
+    'RULES OF FUNNY: keep it SHORT (under 8 words ideally, max ~12), ONE punchline, no rambling metaphors, no words that sound off when translated to Albanian. The twist should hit instantly. ' +
     '3) Do NOT use existing meme phrases, song lyrics, movie quotes, brand slogans, or trademarked text. ' +
     '4) Keep it clean and broadly appropriate. ' +
     'Respond ONLY with valid JSON, no extra text, in this exact format: ' +
