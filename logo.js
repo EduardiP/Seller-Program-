@@ -44,7 +44,7 @@ scene, or a mockup on any product or surface.`;
         prompt: PROMPT,
         n: 1,
         size: '1024x1024',
-        quality: 'high'
+        quality: 'medium'
       })
     });
     const data = await r.json();
