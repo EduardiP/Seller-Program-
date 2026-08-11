@@ -11,6 +11,12 @@ shapes, very little internal linework or texture detail. Think modern minimal lo
 Keep the same character identity: same overall color palette, same key design, same general head shape and
 features — but simplified and reduced to clean essential shapes throughout.
 
+IMPORTANT — it must still clearly and unmistakably read as an owl, not an abstract or ambiguous shape. Keep the
+defining owl features clearly recognizable even while simplifying: the pointed ear tufts on top of the head, the
+round facial disc around the eyes, and the distinctive ringed owl-eye shape. Simplify the RENDERING (fewer lines,
+less texture, bolder flat shapes) without losing these identifying features — a viewer must immediately recognize
+"owl" at a glance.
+
 CROP — tight, close composition: only the head, the key held in the beak, and just a small hint of the chest —
 NOT the shoulders, NOT the full upper body. The wings appear small, to the sides of that chest hint, not as large
 shapes — just enough presence to suggest wings, minimal in size and detail.
