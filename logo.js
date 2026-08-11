@@ -6,29 +6,26 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Make this MUCH more minimalist than the current version — significantly simplified, clean, bold
-shapes, very little internal linework or texture detail. Think modern minimal logo mark, not detailed illustration.
-Keep the same character identity: same overall color palette, same key design, same general head shape and
-features — but simplified and reduced to clean essential shapes throughout.
-
-IMPORTANT — it must still clearly and unmistakably read as an owl, not an abstract or ambiguous shape. Keep the
-defining owl features clearly recognizable even while simplifying: the pointed ear tufts on top of the head, the
-round facial disc around the eyes, and the distinctive ringed owl-eye shape. Simplify the RENDERING (fewer lines,
-less texture, bolder flat shapes) without losing these identifying features — a viewer must immediately recognize
-"owl" at a glance.
+const PROMPT = `Keep the same level of fine linework, feather detail, and rendering style as the original image —
+do NOT flatten or oversimplify it into plain solid silhouette shapes. Same color palette, same key design, same
+head shape and features, same amount of detail as the original.
 
 CROP — tight, close composition: only the head, the key held in the beak, and just a small hint of the chest —
 NOT the shoulders, NOT the full upper body. The wings appear small, to the sides of that chest hint, not as large
-shapes — just enough presence to suggest wings, minimal in size and detail.
+shapes — just enough presence to suggest wings, small in size but with the same fine linework/feather detail as
+the rest of the piece, not flat silhouette shapes.
 
 WINGS: barely lifted, the smallest hint of separation from the body — NOT a moderate opening, NOT a wide spread.
 Small and subtle, secondary to the head and key.
 
-CIRCLE FRAME: contain this tight, minimal composition (head, key, small chest hint, small side wings) within a
-clean circular border/frame, like a badge or app icon, centered and well-balanced within the circle.
+CIRCLE FRAME: contain this tight composition (head, key, small chest hint, small side wings) within a clean
+circular border/frame, like a badge or app icon, centered and well-balanced within the circle.
 
-QUALITY BAR: this should read as a polished, minimal, professional logo mark for a global company — the kind of
-clean confident mark that works small on a favicon and large on signage.
+IMPORTANT — it must clearly and unmistakably read as an owl: keep the pointed ear tufts, the round facial disc,
+and the distinctive ringed owl-eye shape clearly recognizable and detailed, not reduced to abstract flat shapes.
+
+QUALITY BAR: this should read as a polished, professional logo mark for a global company — detailed and crafted
+like the original artwork, just tightly cropped and framed in a circle.
 
 Keep unchanged: the head turned to the side so that only one eye is visible and the other eye is not visible at
 all (a normal eye, no key shape inside it), and the beak open with the same ornate key design gripped through the
