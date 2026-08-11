@@ -8,11 +8,13 @@ router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return res.status(500).send('OPENAI_API_KEY mungon.');
 
-  const PROMPT = `A detailed vector emblem logo of a single owl, in the same visual spirit as the Great Seal of the
-United States — formal, symmetrical, ornate engraved-style linework, fine feather detail rendered through layered
-flat vector shapes (not gradients, not a photographic texture) — a middle ground between a simple flat icon and
-a fully realistic illustration. Standalone brand logo mark on a plain solid background. No text, no banner, no
-shield, no eagle — an original owl design only, borrowing only the Great Seal's formal engraved-emblem style.
+  const PROMPT = `A clean flat VECTOR illustration logo of a single owl, in the spirit of the Great Seal of the
+United States but rendered as simple, confident vector shapes — bold flat color areas, clean crisp outlines,
+minimal simple linework for feather texture (a few clean strokes, not dense detailed rendering). Explicitly
+NOT a realistic painting, NOT a detailed engraving, NOT photographic shading or gradients — think modern flat
+vector logo/icon design, clean and graphic, closer to a simple icon than to a detailed illustration. Standalone
+brand logo mark on a plain solid background. No text, no banner, no shield, no eagle — an original owl design
+only, borrowing only the Great Seal's formal symmetrical composition, not its realistic engraved rendering style.
 
 BODY ORIENTATION — critical, re-check this before finalizing: the owl's chest, shoulders, and torso face straight
 forward toward the viewer, perfectly symmetrical left-to-right, upright, NOT rotated or angled to either side.
