@@ -6,20 +6,22 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Redesign this as a circular logo badge, slightly more minimalist than the current version —
-cleaner, bolder, simplified shapes with fewer small linework details, while staying clearly the same character.
+const PROMPT = `Do NOT redesign, restyle, or simplify this image in any way. Every line, shape, color, and detail
+must stay exactly as they currently are — same linework density, same colors, same head, same body, same key,
+same everything. This is NOT a redesign request.
 
-COMPOSITION: include the head, a bit of the shoulders/upper body (not the full body, not legs or feet), and both
-wings. The wings should be shown in the middle of opening for flight — clearly lifted and spreading outward, more
-open than barely-lifted, but still short of a full wide-open spread. Take ONLY this wing shape/pose idea from the
-concept of a wing mid-opening — do NOT copy any realistic, dark, heavily-textured, or engraved rendering style;
-keep our own flat vector style and color palette throughout, including on the wings.
+Make exactly two changes, nothing else:
 
-CIRCLE FRAME: contain the whole composition (head, partial body, wings) within a clean circular border/frame,
-like a badge or app icon — sized and centered to look intentional as a circular mark.
+1. Place this exact owl inside a clean circular frame/badge border, cropped and centered so it fits within the
+circle — like putting the same unchanged image into a round badge shape.
 
-Keep unchanged: the head turned to the side showing mostly one normal eye (no key shape in the eye), the beak
-open with the same ornate key gripped through the middle of its shaft, and the same flat vector color palette.`;
+2. The wings: right now they hang flat down against the body. Lift them just the smallest amount — the very
+first hint of starting to rise, barely separated from the body. This must NOT look like a moderate opening and
+absolutely NOT a wide spread — if in doubt, keep them much closer to fully closed than to any open position.
+Only a small, subtle lift, nothing more.
+
+Everything else about the image — style, detail level, colors, head position, body, key — remains completely
+unchanged from the original.`;
 
 router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
