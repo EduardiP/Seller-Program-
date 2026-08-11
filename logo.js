@@ -8,31 +8,32 @@ router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return res.status(500).send('OPENAI_API_KEY mungon.');
 
-  const PROMPT = `A FLAT VECTOR illustration logo of a single owl — bold clean vector shapes with fine linework used only
-as accent detail (feather outlines, a few texture strokes), NOT dense all-over cross-hatching, NOT an engraved
-photographic texture, NOT painterly shading. Think "detailed vector emblem," not "engraved etching." Composition
-inspired by the formal, symmetrical gravitas of the Great Seal of the United States — detailed and emblematic,
-but rendered as clean flat vector art, not a realistic engraving. Standalone brand logo mark on a plain solid
-background.
+  const PROMPT = `A detailed vector emblem logo of a single owl — more intricate and layered than a flat minimal icon,
+with clean vector shapes and confident linework showing real feather detail and shading through layered flat
+tones (not gradients, not photographic texture, not a realistic engraving) — a middle ground between a simple
+flat icon and a fully realistic illustration. Ornate, crest-like, emblematic — like a detailed heraldic badge,
+rendered as clean vector art. Standalone brand logo mark on a plain solid background. No text, no banner, no
+shield, no eagle — an original owl design only.
 
-Do NOT copy the Great Seal's actual content — no eagle, no shield, no arrows, no olive branch, no stars, no
-banner text. Only borrow its formal, symmetrical, detailed-emblem AESTHETIC, applied to an original owl subject.
+BODY ORIENTATION: the owl's body and chest face straight forward, front-on, symmetrical and upright. Only the
+head is turned to the side — the body itself does NOT turn or angle away from the viewer.
 
-IMPORTANT — wing pose: take ONLY the feather shape and layered style from angel-wing references, but the ANGLE
-must be different from a typical fully-spread angel wing. The wings must be raised at only a moderate angle,
-roughly 30-45 degrees up from the body — clearly NOT fully spread wide open, NOT symmetrical full extension like
-a classic spread-wing angel illustration. This should read as the very beginning of a wing-flap, mid-motion,
-partially raised — not the wings' fully open peak position.
+HEAD: turned to the side, but only partially, showing mostly one eye rather than a full front-facing face or a
+full side profile.
 
-The owl's head is turned to the side, but only partially, showing mostly one eye rather than a full front-facing
-face or a full profile.
+WING POSITION — this is critical: the wings are raised only slightly, just beginning a wingbeat. The tip of each
+wing must reach NO HIGHER than the top of the owl's head — wingtips stay level with or below the head, spreading
+outward and slightly upward from the shoulders. Do NOT let the wingtips rise above the head. Do NOT form a tall
+V or U shape framing the head from above. This is the very start of a wing-flap, close to the body, not an
+open display position.
 
-The eye's pupil is not a plain circle — it is explicitly shaped like an old-fashioned ornate skeleton key silhouette
-(the classic key outline: a round bow/handle at top connecting to a narrow shaft with small teeth at the bottom),
-rendered in place of a normal round pupil, clearly recognizable as a key shape at a glance, not just a dark circle.
+EYE: the pupil is shaped like a keyhole (a small circle with a narrow triangular notch extending down from it),
+clearly recognizable as a keyhole shape, not a plain round pupil.
 
-The owl's beak is open (not closed), and a second matching key-silhouette shape (same skeleton-key outline) sits
-inside the open beak, as if held in it.
+BEAK AND KEY — must be clearly legible, not ambiguous: the beak is open, pointing forward and slightly down, with
+a visible gap between upper and lower beak. An ornate skeleton-key shape hangs from the open beak, held crosswise
+in it, drawn large and clear enough to be instantly recognizable as a key — not tucked away or overlapping other
+shapes.
 
 This is a standalone logo/brand icon only. Do NOT present it as a t-shirt print, a badge with a text ring, a full
 scene, or a mockup on any product or surface.`;
