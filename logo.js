@@ -9,11 +9,14 @@ const router = express.Router();
 const PROMPT = `Redesign this as a circular logo badge, slightly more minimalist than the current version —
 cleaner, bolder, simplified shapes with fewer small linework details, while staying clearly the same character.
 
-CROP TO HEAD AND KEY ONLY: remove the body, wings, legs, and feet entirely. Only the owl's head (with its ear
-tufts) and the key held in its beak should be visible — nothing below the neck.
+COMPOSITION: include the head, a bit of the shoulders/upper body (not the full body, not legs or feet), and both
+wings. The wings should be shown in the middle of opening for flight — clearly lifted and spreading outward, more
+open than barely-lifted, but still short of a full wide-open spread. Take ONLY this wing shape/pose idea from the
+concept of a wing mid-opening — do NOT copy any realistic, dark, heavily-textured, or engraved rendering style;
+keep our own flat vector style and color palette throughout, including on the wings.
 
-CIRCLE FRAME: contain the head and key composition within a clean circular border/frame, like a badge or app
-icon. The head and key should fill the circle nicely, sized and centered to look intentional as a circular mark.
+CIRCLE FRAME: contain the whole composition (head, partial body, wings) within a clean circular border/frame,
+like a badge or app icon — sized and centered to look intentional as a circular mark.
 
 Keep unchanged: the head turned to the side showing mostly one normal eye (no key shape in the eye), the beak
 open with the same ornate key gripped through the middle of its shaft, and the same flat vector color palette.`;
