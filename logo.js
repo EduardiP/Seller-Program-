@@ -7,12 +7,18 @@ const router = express.Router();
 const LINK_KRAHET = 'https://screeneasy.co.uk/wp-content/uploads/2020/08/Angel-Wings1.svg';
 const LINK_KOKA = 'https://t3.ftcdn.net/jpg/05/48/51/68/360_F_548516853_gD2YNJOqnJrCwES7t7m3ZrWwX9bHfSGI.jpg';
 
-// Merr nje imazh nga interneti dhe e kthen ne base64 data-URI (per ta dhene te GPT-4o si input vizual)
+// Merr nje imazh nga interneti dhe e kthen ne base64 data-URI (per ta dhene te GPT-4o si input vizual).
+// SVG kthehet ne PNG paraprakisht (GPT-4o s'pranon SVG), permes nje sherbimi te lire konvertimi, pa varesi te reja.
 async function merrImazhinBase64(url) {
-  const r = await fetch(url);
+  let urlPerFetch = url;
+  if (url.toLowerCase().endsWith('.svg')) {
+    const pastrUrl = url.replace(/^https?:\/\//, '');
+    urlPerFetch = `https://images.weserv.nl/?url=${encodeURIComponent(pastrUrl)}&output=png&w=800`;
+  }
+  const r = await fetch(urlPerFetch);
   if (!r.ok) throw new Error(`S'u mor imazhi (${url}): ${r.status}`);
   const buf = Buffer.from(await r.arrayBuffer());
-  const contentType = r.headers.get('content-type') || 'image/png';
+  const contentType = urlPerFetch === url ? (r.headers.get('content-type') || 'image/png') : 'image/png';
   return `data:${contentType};base64,${buf.toString('base64')}`;
 }
 
