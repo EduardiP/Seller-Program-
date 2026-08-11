@@ -6,31 +6,27 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Do NOT redesign, restyle, or simplify anything. Every line, shape, color, and detail on the head,
-face, key, and beak must stay exactly as they currently are — same linework density, same colors, same everything
-about those parts. This is a crop-and-frame task, not a redesign.
+const PROMPT = `Make this MUCH more minimalist than the current version — significantly simplified, clean, bold
+shapes, very little internal linework or texture detail. Think modern minimal logo mark, not detailed illustration.
+Keep the same character identity: same overall color palette, same key design, same general head shape and
+features — but simplified and reduced to clean essential shapes throughout.
 
-CROP: do not include the whole owl. Only include the head, the key held in the beak, and a small amount of the
-upper body/shoulders — just enough that the wings can be shown attached. Do NOT include the lower body, legs, or
-feet at all.
+CROP — tight, close composition: only the head, the key held in the beak, and just a small hint of the chest —
+NOT the shoulders, NOT the full upper body. The wings appear small, to the sides of that chest hint, not as large
+shapes — just enough presence to suggest wings, minimal in size and detail.
 
-WINGS: right now they hang flat down against the body. In this cropped version, lift them just the smallest
-amount — the very first hint of starting to rise, barely separated from the body. This must NOT look like a
-moderate opening and absolutely NOT a wide spread — if in doubt, keep them much closer to fully closed than to
-any open position. Only a small, subtle lift, nothing more.
+WINGS: barely lifted, the smallest hint of separation from the body — NOT a moderate opening, NOT a wide spread.
+Small and subtle, secondary to the head and key.
 
-CIRCLE FRAME: contain this cropped composition (head, key, small bit of body, wings) within a clean circular
-border/frame, like a badge or app icon, centered and sized to fill the circle naturally.
+CIRCLE FRAME: contain this tight, minimal composition (head, key, small chest hint, small side wings) within a
+clean circular border/frame, like a badge or app icon, centered and well-balanced within the circle.
 
-QUALITY BAR: this final circular mark should look like a polished, minimal, professional logo for a global
-company — clean, confident, well-balanced, the kind of mark that works small on a favicon and large on signage.
-This is about the overall polish and balance of the composition, NOT about removing or simplifying the specific
-details locked in below.
+QUALITY BAR: this should read as a polished, minimal, professional logo mark for a global company — the kind of
+clean confident mark that works small on a favicon and large on signage.
 
-Keep completely unchanged: the head turned to the side so that only one eye is visible and the other eye is not
-visible at all (no key shape in the visible eye, just a normal eye),
-the beak open with the same ornate key gripped through the middle of its shaft, and the exact same flat vector
-color palette and rendering style as the original.`;
+Keep unchanged: the head turned to the side so that only one eye is visible and the other eye is not visible at
+all (a normal eye, no key shape inside it), and the beak open with the same ornate key design gripped through the
+middle of its shaft.`;
 
 router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
