@@ -6,30 +6,16 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Keep the same level of fine linework, feather detail, and rendering style as the original image —
-do NOT flatten or oversimplify it into plain solid silhouette shapes. Same color palette, same key design, same
-head shape and features, same amount of detail as the original.
+const PROMPT = `Keep this circular owl logo almost exactly as it is — same composition, same circular frame, same
+owl head, same key, same colors, same cropping. This design is already correct; only refine it lightly.
 
-CROP — tight, close composition: only the head, the key held in the beak, and just a small hint of the chest —
-NOT the shoulders, NOT the full upper body. The wings appear small, to the sides of that chest hint, not as large
-shapes — just enough presence to suggest wings, small in size but with the same fine linework/feather detail as
-the rest of the piece, not flat silhouette shapes.
+Make it slightly cleaner and more minimalist: smooth and tidy the linework, remove any small messy or awkward
+details, make the shapes a bit more confident and balanced — but do NOT redesign it, do NOT add complexity, and
+do NOT change the composition, the owl's recognizable features (ear tufts, facial disc, ringed eye), the single
+visible eye, the open beak, or the key gripped through the middle of its shaft.
 
-WINGS: barely lifted, the smallest hint of separation from the body — NOT a moderate opening, NOT a wide spread.
-Small and subtle, secondary to the head and key.
-
-CIRCLE FRAME: contain this tight composition (head, key, small chest hint, small side wings) within a clean
-circular border/frame, like a badge or app icon, centered and well-balanced within the circle.
-
-IMPORTANT — it must clearly and unmistakably read as an owl: keep the pointed ear tufts, the round facial disc,
-and the distinctive ringed owl-eye shape clearly recognizable and detailed, not reduced to abstract flat shapes.
-
-QUALITY BAR: this should read as a polished, professional logo mark for a global company — detailed and crafted
-like the original artwork, just tightly cropped and framed in a circle.
-
-Keep unchanged: the head turned to the side so that only one eye is visible and the other eye is not visible at
-all (a normal eye, no key shape inside it), and the beak open with the same ornate key design gripped through the
-middle of its shaft.`;
+The result should look like a polished, professional, minimal circular logo badge for a global company — the same
+design as now, just cleaner and more refined.`;
 
 router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
