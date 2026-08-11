@@ -22,7 +22,8 @@ The owl's head is turned slightly to the side — a partial turn, NOT a full 90-
 one eye is clearly the visible, featured eye of the composition.
 
 Inside that visible eye, a small ornate vintage key shape is incorporated as part of the eye's design (the key
-reads as the pupil/iris detail). A second, matching key motif is incorporated into the owl's beak/mouth area.
+reads as the pupil/iris detail). The owl's beak is OPEN (not closed), and a second, matching key shape is placed
+inside the open beak, as if held or visible through it.
 
 Rendering style: flat, clean, bold vector illustration with simple confident shapes and minimal internal detail.
 Do NOT make it photorealistic, do NOT make it an engraved or textured seal, do NOT make it shaded or painterly.
