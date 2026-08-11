@@ -15,25 +15,23 @@ flat icon and a fully realistic illustration. Ornate, crest-like, emblematic —
 rendered as clean vector art. Standalone brand logo mark on a plain solid background. No text, no banner, no
 shield, no eagle — an original owl design only.
 
-BODY ORIENTATION: the owl's body and chest face straight forward, front-on, symmetrical and upright. Only the
-head is turned to the side — the body itself does NOT turn or angle away from the viewer.
+WING POSITION — read this twice, it is the most important instruction: the wings are NOT spread open. They are
+mostly folded against the body, with only the very tips barely lifting outward, like the first small twitch
+before takeoff — NOT a flap, NOT a display, NOT an open V or U shape. Wingtips stay well below the top of the
+head and close to the body silhouette. If in doubt, draw the wings MORE closed and MORE folded than you think —
+closer to fully folded than to any open position.
 
-HEAD: turned to the side, but only partially, showing mostly one eye rather than a full front-facing face or a
-full side profile.
-
-WING POSITION — this is critical: the wings are raised only slightly, just beginning a wingbeat. The tip of each
-wing must reach NO HIGHER than the top of the owl's head — wingtips stay level with or below the head, spreading
-outward and slightly upward from the shoulders. Do NOT let the wingtips rise above the head. Do NOT form a tall
-V or U shape framing the head from above. This is the very start of a wing-flap, close to the body, not an
-open display position.
+BODY ORIENTATION: the owl's body and chest face straight forward, front-on, symmetrical and upright — the body
+itself does not turn or angle away from the viewer. Only the head turns to the side, partially, showing mostly
+one eye rather than a full front-facing face or a full side profile.
 
 EYE: the pupil is shaped like a keyhole (a small circle with a narrow triangular notch extending down from it),
 clearly recognizable as a keyhole shape, not a plain round pupil.
 
-BEAK AND KEY — must be clearly legible, not ambiguous: the beak is open, pointing forward and slightly down, with
-a visible gap between upper and lower beak. An ornate skeleton-key shape hangs from the open beak, held crosswise
-in it, drawn large and clear enough to be instantly recognizable as a key — not tucked away or overlapping other
-shapes.
+BEAK AND KEY: the beak is open, with a visible gap between upper and lower beak. An ornate key is held crosswise
+in the beak, gripped through the MIDDLE of its shaft (like a dog holding a stick crosswise) — NOT held by one end,
+NOT dangling from the tip or the bow/handle. Both the bow (handle) end and the toothed end of the key should be
+visible sticking out on either side of the beak.
 
 This is a standalone logo/brand icon only. Do NOT present it as a t-shirt print, a badge with a text ring, a full
 scene, or a mockup on any product or surface.`;
