@@ -6,22 +6,25 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Do NOT redesign, restyle, or simplify this image in any way. Every line, shape, color, and detail
-must stay exactly as they currently are — same linework density, same colors, same head, same body, same key,
-same everything. This is NOT a redesign request.
+const PROMPT = `Do NOT redesign, restyle, or simplify anything. Every line, shape, color, and detail on the head,
+face, key, and beak must stay exactly as they currently are — same linework density, same colors, same everything
+about those parts. This is a crop-and-frame task, not a redesign.
 
-Make exactly two changes, nothing else:
+CROP: do not include the whole owl. Only include the head, the key held in the beak, and a small amount of the
+upper body/shoulders — just enough that the wings can be shown attached. Do NOT include the lower body, legs, or
+feet at all.
 
-1. Place this exact owl inside a clean circular frame/badge border, cropped and centered so it fits within the
-circle — like putting the same unchanged image into a round badge shape.
+WINGS: right now they hang flat down against the body. In this cropped version, lift them just the smallest
+amount — the very first hint of starting to rise, barely separated from the body. This must NOT look like a
+moderate opening and absolutely NOT a wide spread — if in doubt, keep them much closer to fully closed than to
+any open position. Only a small, subtle lift, nothing more.
 
-2. The wings: right now they hang flat down against the body. Lift them just the smallest amount — the very
-first hint of starting to rise, barely separated from the body. This must NOT look like a moderate opening and
-absolutely NOT a wide spread — if in doubt, keep them much closer to fully closed than to any open position.
-Only a small, subtle lift, nothing more.
+CIRCLE FRAME: contain this cropped composition (head, key, small bit of body, wings) within a clean circular
+border/frame, like a badge or app icon, centered and sized to fill the circle naturally.
 
-Everything else about the image — style, detail level, colors, head position, body, key — remains completely
-unchanged from the original.`;
+Keep completely unchanged: the head turned to the side showing mostly one normal eye (no key shape in the eye),
+the beak open with the same ornate key gripped through the middle of its shaft, and the exact same flat vector
+color palette and rendering style as the original.`;
 
 router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
