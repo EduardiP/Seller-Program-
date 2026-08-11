@@ -17,6 +17,7 @@ app.use('/', require('./pinterest').router);
 app.use('/', require('./videot').router);
 app.use('/', require('./buffer').router);
 app.use('/', require('./automatizimi').router);
+app.use('/', require('./logo').router);
 
 initDb()
   .then(() => {
