@@ -6,21 +6,17 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 
-const PROMPT = `Keep this exact owl logo's style, colors, key, and beak completely unchanged. Make three
-targeted adjustments:
+const PROMPT = `Redesign this as a circular logo badge, slightly more minimalist than the current version —
+cleaner, bolder, simplified shapes with fewer small linework details, while staying clearly the same character.
 
-1. BODY: straighten the body and chest so they face directly forward toward the viewer, symmetrical left-to-right
-— right now the body is angled to one side, fix that so only the head remains turned.
+CROP TO HEAD AND KEY ONLY: remove the body, wings, legs, and feet entirely. Only the owl's head (with its ear
+tufts) and the key held in its beak should be visible — nothing below the neck.
 
-2. HEAD: turn the head to the side a bit MORE than it currently is, so that mostly one eye is visible rather than
-both eyes — a clearer side turn than now, but still not a full 90-degree profile. The eye itself stays a completely
-normal eye — no key shape, no special design inside it, just a normal eye.
+CIRCLE FRAME: contain the head and key composition within a clean circular border/frame, like a badge or app
+icon. The head and key should fill the circle nicely, sized and centered to look intentional as a circular mark.
 
-3. WINGS: right now they hang down against the body — lift them slightly so they look a bit more ready to open,
-a small increase from their current position — but do NOT spread them open. Just a bit more raised/alert than now.
-
-Do not change anything else — same key gripped through its middle in the open beak, same flat vector style, same
-colors, same overall design.`;
+Keep unchanged: the head turned to the side showing mostly one normal eye (no key shape in the eye), the beak
+open with the same ornate key gripped through the middle of its shaft, and the same flat vector color palette.`;
 
 router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
