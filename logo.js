@@ -8,22 +8,21 @@ router.get('/gjenero-logo-buf', async (req, res) => {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return res.status(500).send('OPENAI_API_KEY mungon.');
 
-  const PROMPT = `A detailed vector emblem logo of a single owl — more intricate and layered than a flat minimal icon,
-with clean vector shapes and confident linework showing real feather detail and shading through layered flat
-tones (not gradients, not photographic texture, not a realistic engraving) — a middle ground between a simple
-flat icon and a fully realistic illustration. Ornate, crest-like, emblematic — like a detailed heraldic badge,
-rendered as clean vector art. Standalone brand logo mark on a plain solid background. No text, no banner, no
-shield, no eagle — an original owl design only.
+  const PROMPT = `A detailed vector emblem logo of a single owl, in the same visual spirit as the Great Seal of the
+United States — formal, symmetrical, ornate engraved-style linework, fine feather detail rendered through layered
+flat vector shapes (not gradients, not a photographic texture) — a middle ground between a simple flat icon and
+a fully realistic illustration. Standalone brand logo mark on a plain solid background. No text, no banner, no
+shield, no eagle — an original owl design only, borrowing only the Great Seal's formal engraved-emblem style.
 
-WING POSITION — read this twice, it is the most important instruction: the wings are NOT spread open. They are
-mostly folded against the body, with only the very tips barely lifting outward, like the first small twitch
-before takeoff — NOT a flap, NOT a display, NOT an open V or U shape. Wingtips stay well below the top of the
-head and close to the body silhouette. If in doubt, draw the wings MORE closed and MORE folded than you think —
-closer to fully folded than to any open position.
+BODY ORIENTATION — critical, re-check this before finalizing: the owl's chest, shoulders, and torso face straight
+forward toward the viewer, perfectly symmetrical left-to-right, upright, NOT rotated or angled to either side.
+Imagine a vertical line straight down the center of the chest — both shoulders and both wings must be mirror
+images of each other across that line. Only the head breaks this symmetry by turning to the side, partially,
+showing mostly one eye rather than a full front-facing face or a full side profile.
 
-BODY ORIENTATION: the owl's body and chest face straight forward, front-on, symmetrical and upright — the body
-itself does not turn or angle away from the viewer. Only the head turns to the side, partially, showing mostly
-one eye rather than a full front-facing face or a full side profile.
+WING POSITION: the wings are mostly folded against the body, with only the very tips barely lifting outward, like
+the first small twitch before takeoff — NOT a flap, NOT a display, NOT an open V or U shape. Wingtips stay well
+below the top of the head and close to the body silhouette.
 
 EYE: the pupil is shaped like a keyhole (a small circle with a narrow triangular notch extending down from it),
 clearly recognizable as a keyhole shape, not a plain round pupil.
