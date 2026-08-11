@@ -22,7 +22,13 @@ any open position. Only a small, subtle lift, nothing more.
 CIRCLE FRAME: contain this cropped composition (head, key, small bit of body, wings) within a clean circular
 border/frame, like a badge or app icon, centered and sized to fill the circle naturally.
 
-Keep completely unchanged: the head turned to the side showing mostly one normal eye (no key shape in the eye),
+QUALITY BAR: this final circular mark should look like a polished, minimal, professional logo for a global
+company — clean, confident, well-balanced, the kind of mark that works small on a favicon and large on signage.
+This is about the overall polish and balance of the composition, NOT about removing or simplifying the specific
+details locked in below.
+
+Keep completely unchanged: the head turned to the side so that only one eye is visible and the other eye is not
+visible at all (no key shape in the visible eye, just a normal eye),
 the beak open with the same ornate key gripped through the middle of its shaft, and the exact same flat vector
 color palette and rendering style as the original.`;
 
